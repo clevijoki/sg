@@ -1,6 +1,6 @@
 # About
 
-SG is a gemeric video game editor based around SQL. SQL stores data in a very generic fashion, that can be compiled into any form you like.
+SG is a generic video game editor based around SQL. SQL stores data in a very generic fashion, that can be compiled into any form you like.
 
 It's designed to be a counterpart to the existing open source tools out there, like OGRE and SDL which provide engine and libraries to start, but no game editor to place or manage game data.
 
