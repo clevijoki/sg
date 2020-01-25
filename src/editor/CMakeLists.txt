@@ -33,4 +33,4 @@ add_executable(editor
 	resources.qrc
 )
 
-target_link_libraries(editor Qt5::Widgets Qt5::Sql gtest pthread qtadvanceddocking)
+target_link_libraries(editor Qt5::Widgets Qt5::Sql gtest pthread)

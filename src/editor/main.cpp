@@ -91,12 +91,12 @@ int main(int argc, char** argv)
 
 	QMap<QString, create_fn> required_tables;
 
-	required_tables["editor"] = [](Transaction &t) -> Result<> {
-		auto res = t.createTable("editor", {"name VARCHAR(32) PRIMARY KEY NOT NULL, type VARCHAR(32)"});
+	required_tables["prop_editor"] = [](Transaction &t) -> Result<> {
+		auto res = t.createTable("prop_editor", {"name VARCHAR(32) PRIMARY KEY NOT NULL, type VARCHAR(32)"});
 		if (res.failed())
 			return res.error();
 
-		auto res2 = t.insert("editor", {{"name", "Default"}, {"type", "int"}}, "name");
+		auto res2 = t.insert("prop_editor", {{"name", "Default"}, {"type", "int"}}, "name");
 		if (res2.failed())
 			return res2.error();
 
