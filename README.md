@@ -1,97 +1,73 @@
 # About
 
-SG is a SQL Game Editor framework. The goal is to use SQL to store data in a very generic fashion, that can be used in a flexible manner by your game engine, because you can always use SQL queries to create data you wish to load from.
+SG is a SQL Game Editor framework. SQL to stores data in a very generic fashion, that can be compiled into any form you like.
 
-## Why SQL?
+It's designed to be a counterpart to the existing open source tools out there, like OGRE and SDL which provide engine and libraries to start, but no game editor to place or manage game data.
 
-The design of SG is the result of many lunch time discussions while working as an engine and tools developer over a decade.  
+Games like Noita (https://noitagame.com/) which can only function because of a custom game engine, can use SG to create levels, rather than always being fractally generated roguelikes.
 
-* SQL is oddly well suited to a data-oriented game engine, where you want to operate on arrays of data, because SQL itself produces arrays as outputs.
-* You can  store hierarchies, using something called nested sets, which are also well suited to evaluating a hierarchy in a predictable memory manner.
-* You can develop interactively together with the same database.
-* SQL queries may be performed in parallel, which means the entire build process is parallel.
-* SQL can maintan referential integrity, meaning you nver have to worry about common issues like e.g. a name referring to something that was deleted. SQL can either propagate the deletion through or create an error.
+## Design Overview
 
-It's designed to be a counterpart to the existing open source tools out there, like OGRE and SDL which provide engines, but no editors.
+**_SG is currently in a very early stage, and not usable for game development yet, this design overview indicates the current direction, not where it is at today._**
 
-# Design Overview
-
-There are three basic elements in SG:
-
-* Nodes
-* Properties
-* Instances
-
-Nodes contain properties. Properties are things like integers, reals (floats), and references to other nodes.
-
-Examples of things that might be nodes:
-
-* transform
-* rigid_object
-* folder
-* scene
-* components
-* asteroids
-* tile map
-
-Examples of properties are:
-
-* x (real)
-* y (real)
-* name (text) 
-* hit_points (integer)
-* parent_transform (reference to transform instance id)
-
-Instances are tables that are generated via SQL triggers to map all of the properties on all of the nodes to an instance table. So a transform node with 'x real', 'y real', 'rotation real' will become exactly that in the instance table, with some extra info like the instance id being added on.
-
-## Naming Conflicts
-
-In order to prevent naming conflicts and reduce confusion, where any names could conflict in a confusing manner, a _ is prepended to all of the built-in SG
-
-That means built-in tables of:
-* `_node`
-* `_property`
-* `_root` (built-in node type)
-
-And built-in properties for instances like:
-* `_id`
-
-It also means that you are not allowed to begin names with `_`.
-
-And for good measure, to make things much easier for you later on, ids are not allowed to contain spaces.
-
-# Converting this data into the game.
-
-SG uses a model-view-controller framework, which all about having multiple views into data. SG-Edit provides one view and a controller into the SQL database, the game is just another view.
-
-For example, you could create a level with
-
-* level (name text)
-* transform (x real, y real, depth integer, level ref)
-* box (width real, height real, transform ref, level ref)
-* circle (radius real, transform ref, level ref)
-
-Now you can process this data into whatever form you want. Because there is depth then you probably need to write them all into some relational table somehow so you can draw them all back to front (painters algorithm) or front to back with a z-buffer (reverse painters). You could do something like so:
-
-content/_root/box.pgsql:
-```
-select transform.x as "f32 x", transform.y as "f32 y", transform.depth as "f32 depth" from transform
-inner join box on box.transform = transform._id
-where transform._id = {_id}
-```
+* All property data is stored in **components**, e.g. you might create a `PlayerController`, `AIController`, and `Character` component.
+* **Components** are referenced by **entities**. You could use the previous component data to create the entities `Player`, `MushroomEnemy` and `TurtleEnemy`.
+* **Entities** act as scripts to place components. They can contain _build time_ properties which can override properties in their child **components**.
+* **Entities** may also contain other entities
+* **Scenes** are **entities** that have been marked as such, and represent the final resources you produce to make the game function. 
+* Some property types (Position2D, Position3D, Transform2D, Transform3D) will be understood by SG to produce editor widgets to drag and scale elements
+* One element of "data oriented design" is that your data format has to match your problem, SQL is a good format for editing, but bad for runtime. This means there is a compiler stage that can transform your data to a runtime suitible format. This part is entirely up to you.
+* The game can appear in the editor viewport by inserting an interface library which can direct how it should behave, load specific scenes, set the camera transform and pause gameplay when necessary. The game runs as a separate process, so even if it crashes it won't bring down SG Edit. An overlay that contains the SG editor widgets will be placed over top of the game. This means the game can run with the same basic update loop using the same rendering logic as it does in the final product.
 
 # Requirements
 
-* cmake
-* Qt5
-* PostgreSQL
-* SDL2 (For example game only)
+* PostgreSQL (https://www.postgresql.org/)
+* CMake (https://cmake.org/)
+* Ninja Build (https://ninja-build.org/) (Optional, but it is my preferred companion to CMake)
+* Qt5 (https://www.qt.io/)
+* SDL2 (https://www.libsdl.org/) (For example game only)
 
-# SQL Setup
+# Setup
 
-You can run a local PostgreSQL server on both Windows and Linux.
+1. Install PostgreSQL and start it
+2. you need to create a user name and a database for the game content.
+```
+CREATE DATABASE test_game;
+```
+3. Build
+```
+mkdir build
+cd build
+mkdir debug
+cd debug
+cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src
+ninja
+./editor/editor --test
+```
+4. The first time you launch SG Edit, it will prompt you to login, use the `test_game` database you created earlier. 
+5. It will also prompt you to create the built in tables it needs, just click yes.
 
-Once you have installed PostgreSQL, you need to create a user name and a database for the game content.
+# Why SQL?
 
-The first time you launch SG-Edit, it will prompt you to create the built in tables it needs, just click yes.
+The design of SG is the result of many lunch time discussions while working as an engine and tools developer in the AAA industry over a decade.
 
+* SQL queries may be performed in parallel, which means the entire build process is parallel.
+* SQL can maintan referential integrity, meaning you never have to worry about common issues like e.g. a name referring to something that was deleted. SQL forces you to ensure edit actions are correct at every stage.
+* Merging a SQL database is a feasible operation if you can keep a simple format
+* The SQL Server as a separate process allows multiple processes to access (compiler, editor) it and maintain correctness. 
+* You can develop interactively together with the same database.
+* SQL is flexible enough that you can interpret the data however you want, you can produce data-oriented arrays of data or you can produce a scene graph hierarchy.
+
+## SQL Layout
+
+Currently all data is stored in the following tables:
+
+* component - the component names
+* component_prop - the properties associated with components
+* entity - 
+* entity_component
+* entity_component_prop
+* entity_prop
+* entity_prop_link_ops
+* entity_prop_link
+* scene

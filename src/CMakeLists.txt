@@ -7,5 +7,4 @@ project(sg
 )
 
 add_subdirectory(game)
-add_subdirectory(external/ads)
 add_subdirectory(editor)
