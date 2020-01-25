@@ -1,10 +1,10 @@
 # About
 
-SG is a SQL Game Editor framework. SQL to stores data in a very generic fashion, that can be compiled into any form you like.
+SG is a gemeric video game editor based around SQL. SQL stores data in a very generic fashion, that can be compiled into any form you like.
 
 It's designed to be a counterpart to the existing open source tools out there, like OGRE and SDL which provide engine and libraries to start, but no game editor to place or manage game data.
 
-Games like Noita (https://noitagame.com/) which can only function because of a custom game engine, can use SG to create levels, rather than always being fractally generated roguelikes.
+Games like Noita (https://noitagame.com/) which can only function because of a custom game engine, can use SG to create levels, rather than always being fractally generated roguelikes. It's fun to make game engines, but it's a drag to write tools to support them.
 
 ## Design Overview
 
@@ -58,16 +58,3 @@ The design of SG is the result of many lunch time discussions while working as a
 * You can develop interactively together with the same database.
 * SQL is flexible enough that you can interpret the data however you want, you can produce data-oriented arrays of data or you can produce a scene graph hierarchy.
 
-## SQL Layout
-
-Currently all data is stored in the following tables:
-
-* component - the component names
-* component_prop - the properties associated with components
-* entity - 
-* entity_component
-* entity_component_prop
-* entity_prop
-* entity_prop_link_ops
-* entity_prop_link
-* scene
