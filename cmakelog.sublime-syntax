@@ -1,0 +1,48 @@
+%YAML 1.2
+---
+name: cmakelog
+scope: text.cmakelog
+
+contexts:
+  main:
+    - match: ^(\[\d+/\d+\]) (.*)
+      captures:
+        1: constant.numeric.cmakelog
+        2: text.cmakelog
+    - match: ^FAILED.*
+      scope: invalid.cmakelog
+    - match: ^(/[^:]+)[:](\d+)[:]?(\d*)[:]
+      captures:
+        1: markup.underline.link.cmakelog
+        2: constant.numeric.cmakelog
+        3: constant.numeric.cmakelog
+      push:
+        - match: error[:].*
+          scope: keyword.control.cmakelog
+        - match: warning[:].*
+          scope: string.cmakelog
+        - match: note[:].*
+          scope: string.cmakelog
+        - match: \n
+          pop: true
+    - match: -- .*
+      scope: comment.cmakelog
+    - match: /usr/bin/c++.*
+      scope: comment.cmakelog
+    - match: ^\[==========\]
+      scope: entity.name.cmakelog
+    - match: ^\[----------\]
+      scope: entity.name.cmakelog
+    - match: ^\[ RUN      \]
+      scope: entity.name.cmakelog
+    - match: ^\[       OK \]
+      scope: entity.name.cmakelog
+    - match: ^\[  PASSED  \]
+      scope: entity.name.cmakelog
+    - match: ^\[  FAILED  \]
+      scope: invalid.name.cmakelog
+    - match: ^\[.*\]
+      scope: comment.cmakelog
+    - match: ninja[:].*
+      scope: keyword.control.cmakelog
+    

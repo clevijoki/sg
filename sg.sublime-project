@@ -1,0 +1,26 @@
+{
+	"build_systems":
+	[
+		{
+			"name":"SG Debug",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja && ./editor/editor --test",
+			"working_dir":"$project_path/build/debug",
+			"file_regex":"^([^:]+):(\\d+):?(\\d+)?: (.+)",
+			"syntax":"cmakelog.sublime-syntax"
+		},
+		{
+			"name":"SG Release",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Release -GNinja -Wno-dev ../../src && ninja && ./editor/editor --test",
+			"working_dir":"$project_path/build/debug",
+			"file_regex":"^([^:]+):(\\d+):?(\\d+)?: (.+)",
+			"syntax":"cmakelog.sublime-syntax"
+		}
+	],
+	"folders":
+	[
+		{
+			// "folder_exclude_patterns":["build"],
+			"path": "."
+		}
+	]
+}
