@@ -1,10 +1,10 @@
 # About
 
-SG is a SQL Game Editor framework. SQL to stores data in a very generic fashion, that can be compiled into any form you like.
+SG is a generic video game editor based around SQL. One element of "data oriented design" is that your data format has to match your problem, SQL is a good format for editing, but bad for runtime. This means there is a compiler stage that can transform your data to a runtime suitible format. This part is entirely up to you.
 
 It's designed to be a counterpart to the existing open source tools out there, like OGRE and SDL which provide engine and libraries to start, but no game editor to place or manage game data.
 
-Games like Noita (https://noitagame.com/) which can only function because of a custom game engine, can use SG to create levels, rather than always being fractally generated roguelikes.
+Games like Noita (https://noitagame.com/) which can only function because of a custom game engine, can use SG to create levels, rather than always being fractally generated roguelikes. It's fun to make game engines, but it's a drag to write tools to support them.
 
 ## Design Overview
 
@@ -16,7 +16,6 @@ Games like Noita (https://noitagame.com/) which can only function because of a c
 * **Entities** may also contain other entities
 * **Scenes** are **entities** that have been marked as such, and represent the final resources you produce to make the game function. 
 * Some property types (Position2D, Position3D, Transform2D, Transform3D) will be understood by SG to produce editor widgets to drag and scale elements
-* One element of "data oriented design" is that your data format has to match your problem, SQL is a good format for editing, but bad for runtime. This means there is a compiler stage that can transform your data to a runtime suitible format. This part is entirely up to you.
 * The game can appear in the editor viewport by inserting an interface library which can direct how it should behave, load specific scenes, set the camera transform and pause gameplay when necessary. The game runs as a separate process, so even if it crashes it won't bring down SG Edit. An overlay that contains the SG editor widgets will be placed over top of the game. This means the game can run with the same basic update loop using the same rendering logic as it does in the final product.
 
 # Requirements
@@ -58,16 +57,3 @@ The design of SG is the result of many lunch time discussions while working as a
 * You can develop interactively together with the same database.
 * SQL is flexible enough that you can interpret the data however you want, you can produce data-oriented arrays of data or you can produce a scene graph hierarchy.
 
-## SQL Layout
-
-Currently all data is stored in the following tables:
-
-* component - the component names
-* component_prop - the properties associated with components
-* entity - 
-* entity_component
-* entity_component_prop
-* entity_prop
-* entity_prop_link_ops
-* entity_prop_link
-* scene
