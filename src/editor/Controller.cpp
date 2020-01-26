@@ -167,6 +167,9 @@ namespace sg {
 
 	Result<> Transaction::commit() {
 
+		if (failed())
+			return error();
+
 		auto res = commitInternal();
 		if (res.failed())
 			return res.error();
@@ -181,6 +184,10 @@ namespace sg {
 		mController.mUndoStackIndex++;
 
 		return Ok();
+	}
+
+	bool Transaction::hasCommands() const {
+		return !mCommands.empty();
 	}
 
 	Result<> Transaction::performInternal(ICommand& cmd, bool undo) {

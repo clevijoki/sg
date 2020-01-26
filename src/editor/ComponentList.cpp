@@ -1,4 +1,4 @@
-#include "ComponentMetaEditor.h"
+#include "ComponentList.h"
 #include "Controller.h"
 #include "MessageBox.h"
 
@@ -63,7 +63,7 @@ namespace sg {
 					return Ok(); // ignore rename
 
 				if (containsName(new_name)) {
-					return Error(ComponentMetaEditor::tr("Component named '%1' already exists").arg(new_name));
+					return Error(ComponentList::tr("Component named '%1' already exists").arg(new_name));
 				}
 
 				// want to rename the table and model table
@@ -86,7 +86,7 @@ namespace sg {
 
 			auto res = perform();
 			if (res.failed()) {
-				MessageBoxCritical(ComponentMetaEditor::tr("Unable to rename component"), res.errorMessage(), res.errorInfo());
+				MessageBoxCritical(ComponentList::tr("Unable to rename component"), res.errorMessage(), res.errorInfo());
 				return false;
 			}
 
@@ -94,7 +94,7 @@ namespace sg {
 		}
 	};
 
-	ComponentMetaEditor::ComponentMetaEditor(Controller& controller, QWidget* parent) 
+	ComponentList::ComponentList(Controller& controller, QWidget* parent) 
 	: QWidget(parent) {
 
 		auto layout = new QVBoxLayout(this);
@@ -205,7 +205,7 @@ namespace sg {
 
 			auto res = perform();
 			if (res.failed()) {
-				MessageBoxCritical(ComponentMetaEditor::tr("Error creating component"), res.errorMessage(), res.errorInfo());
+				MessageBoxCritical(ComponentList::tr("Error creating component"), res.errorMessage(), res.errorInfo());
 			}
 		});
 
@@ -276,6 +276,6 @@ namespace sg {
 		setContextMenuPolicy(Qt::ActionsContextMenu);
 	}
 
-	ComponentMetaEditor::~ComponentMetaEditor() {
+	ComponentList::~ComponentList() {
 	}
 }

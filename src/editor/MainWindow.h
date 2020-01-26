@@ -35,9 +35,8 @@ namespace sg {
 	class MainWindow : public QMainWindow {
 		Q_OBJECT
 
-		class PropertyMetaEditor *mPropertyMetaEditor;
-		class ComponentMetaEditor *mComponentMetaEditor;
-		class EntityEditor *mEntityEditor;
+		class ComponentList *mComponentList;
+		class EntityList *mEntityList;
 
 		class Controller& mController;
 

@@ -20,13 +20,14 @@ find_package(GTest)
 add_executable(editor
 	main.cpp
 	CodeGenerator.cpp
-	ComponentMetaEditor.cpp
-	ComponentPropertyMetaEditor.cpp
+	ComponentEditor.cpp
+	ComponentList.cpp
 	ConnectDialog.cpp
 	Connection.cpp
 	Controller.cpp
 	EntityEditor.cpp
-	EntityPropertyEditor.cpp
+	EntityList.cpp
+	InitialSetup.cpp
 	MainWindow.cpp
 	MessageBox.cpp
 	Result.cpp

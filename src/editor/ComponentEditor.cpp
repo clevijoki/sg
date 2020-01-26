@@ -1,4 +1,4 @@
-#include "EntityPropertyEditor.h"
+#include "ComponentEditor.h"
 
 #include <QTableView>
 #include <QSqlQueryModel>
@@ -10,10 +10,7 @@
 #include <QAction>
 #include <QItemDelegate>
 #include <QComboBox>
-#include <QLabel>
 #include <QDebug>
-#include <QGroupBox>
-#include <QScrollArea>
 
 #include "MessageBox.h"
 #include "Controller.h"
@@ -21,7 +18,7 @@
 
 namespace sg {
 
-	class EntityPropertyComponentTypeDelegate : public QItemDelegate {
+	class ComponentPropTypeDelegate : public QItemDelegate {
 
 	public:
 		using QItemDelegate::QItemDelegate;
@@ -29,11 +26,19 @@ namespace sg {
 		QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex& index) const override {
 
 			auto cb = new QComboBox(parent);
-
-			auto model = new QSqlQueryModel(cb);
-			model->setQuery("SELECT name, id FROM component");
-
-			cb->setModel(model);
+			cb->addItems({
+				"i8",
+				"u8",
+				"i16",
+				"u16",
+				"i32",
+				"u32",
+				"f32",
+				"f64",
+				"text",
+				"component",
+				"component_ref",
+			});
 
 			return cb;
 		}
@@ -64,7 +69,7 @@ namespace sg {
 		}
 	};
 
-	class EntityPropMetaModel : public QSqlQueryModel {
+	class ComponentPropModel : public QSqlQueryModel {
 
 		Controller& mController;
 		QVariant mComponentId;
@@ -75,17 +80,17 @@ namespace sg {
 		static const int DEFAULT_VALUE_COL = 2;
 		static const int ID_COL = 3;
 
-		EntityPropMetaModel(Controller& controller, QObject* parent, QVariant entity_id)
+		ComponentPropModel(Controller& controller, QObject* parent, QVariant component_id)
 		: QSqlQueryModel(parent)
 		, mController(controller)
-		, mComponentId(std::move(entity_id))
+		, mComponentId(std::move(component_id))
 		{}
 
-		~EntityPropMetaModel() {
+		~ComponentPropModel() {
 		}
 
 		void refresh() {
-			setQuery(QString("SELECT name, type, default_value, id FROM entity_prop WHERE entity_id = %1").arg(ToSqlLiteral(mComponentId)));
+			setQuery(QString("SELECT name AS \"Name\", type AS \"Type\", default_value AS \"Default Value\", id FROM component_prop WHERE component_id = %1").arg(ToSqlLiteral(mComponentId)));
 		}
 
 		bool containsName(const QString& name) const {
@@ -116,7 +121,7 @@ namespace sg {
 					return Ok(); // ignore value change
 
 				if (unique_check && containsName(new_value)) {
-					return Error(EntityPropertyEditor::tr("Property '%1' '%2' already exists").arg(column_name).arg(new_value));
+					return Error(ComponentEditor::tr("Property '%1' '%2' already exists").arg(column_name).arg(new_value));
 				}
 
 				// want to rename the table and model table
@@ -126,7 +131,7 @@ namespace sg {
 					QModelIndex id_idx = this->index(index.row(), int(ID_COL));
 
 					auto res = t.update(
-						"entity_prop", 
+						"component_prop", 
 						{{column_name, new_value}},
 						{{column_name, current_value}},
 						"id",
@@ -145,7 +150,7 @@ namespace sg {
 				case NAME_COL: {
 					auto res = perform("name", true);
 					if (res.failed()) {
-						MessageBoxCritical(EntityPropertyEditor::tr("Unable to rename property"), res.errorMessage(), res.errorInfo());
+						MessageBoxCritical(ComponentEditor::tr("Unable to rename property"), res.errorMessage(), res.errorInfo());
 						return false;
 					}
 				}
@@ -155,7 +160,7 @@ namespace sg {
 					auto res = perform("type", false);
 
 					if (res.failed()) {
-						MessageBoxCritical(EntityPropertyEditor::tr("Unable to change type"), res.errorMessage(), res.errorInfo());
+						MessageBoxCritical(ComponentEditor::tr("Unable to change type"), res.errorMessage(), res.errorInfo());
 						return false;
 					}
 				}
@@ -165,7 +170,7 @@ namespace sg {
 					auto res = perform("default_value", false);
 
 					if (res.failed()) {
-						MessageBoxCritical(EntityPropertyEditor::tr("Unable to change default value"), res.errorMessage(), res.errorInfo());
+						MessageBoxCritical(ComponentEditor::tr("Unable to change default value"), res.errorMessage(), res.errorInfo());
 						return false;
 					}
 				}
@@ -181,32 +186,24 @@ namespace sg {
 		}
 	};
 	
-	EntityPropertyEditor::EntityPropertyEditor(Controller& controller, QVariant entity_id, QWidget* parent)
+	ComponentEditor::ComponentEditor(Controller& controller, QVariant component_id, QWidget* parent)
 	: QWidget(parent) {
 
-		auto scroll_area = new QScrollArea();
-		auto layout = new QVBoxLayout();
-		this->setLayout(layout);
-		layout->addWidget(scroll_area);
+		auto layout = new QVBoxLayout(this);
+		setLayout(layout);
 
-		auto scroll_area_widget = new QWidget(scroll_area);
-		auto scroll_area_layout = new QVBoxLayout();
-		scroll_area_widget->setLayout(scroll_area_layout);
-
-		auto component_group = new QGroupBox(tr("Components"));
-		auto component_group_layout = new QVBoxLayout();
-
-		scroll_area_layout->addWidget(component_group);
-
-		auto filter_line = new QLineEdit(scroll_area_widget);
+		auto filter_line = new QLineEdit(this);
+		filter_line->setPlaceholderText(tr("Search filter..."));
 
 		auto filter_layout = new QHBoxLayout();
+		layout->addLayout(filter_layout);
+
 		filter_layout->addWidget(filter_line);
 
-		auto add_button = new QPushButton(tr("Add Component"), scroll_area_widget);
-		auto model = new EntityPropMetaModel(controller, this, entity_id);
+		auto add_button = new QPushButton(tr("New Property"), this);
+		auto model = new ComponentPropModel(controller, this, component_id);
 
-		connect(add_button, &QPushButton::clicked, [entity_id, &controller, model](){
+		connect(add_button, &QPushButton::clicked, [component_id, &controller, model](){
 
 			auto perform = [&]() -> Result<> {
 				auto t = controller.createTransaction(QString("New component property"));
@@ -226,9 +223,9 @@ namespace sg {
 
 				// add a new row to the selected component
 				auto res = t.insert(
-					"entity_prop",
+					"component_prop",
 					{
-						{"entity_id", entity_id},
+						{"component_id", component_id},
 						{"name", new_prop_name},
 						{"type", "i32"},
 						{"default_value", "0"}
@@ -246,66 +243,44 @@ namespace sg {
 
 			auto res = perform();
 			if (res.failed()) {
-				MessageBoxCritical(EntityPropertyEditor::tr("Error creating component property"), res.errorMessage(), res.errorInfo());
+				MessageBoxCritical(ComponentEditor::tr("Error creating component property"), res.errorMessage(), res.errorInfo());
 			}
 		});
 
 		filter_layout->addWidget(add_button);
-		component_group_layout->addLayout(filter_layout);
 
-		auto component_view = new QTableView(scroll_area_widget);
-		component_view->setItemDelegateForColumn(1, new EntityPropertyComponentTypeDelegate());
-		component_group_layout->addWidget(component_view);
+		auto view = new QTreeView(this);
+		view->setItemDelegateForColumn(ComponentPropModel::TYPE_COL, new ComponentPropTypeDelegate());
+		layout->addWidget(view);
 
-		auto component_proxy_model = new QSortFilterProxyModel(this);
-		component_proxy_model->setSourceModel(model);
-		component_view->setModel(component_proxy_model);
+		auto proxy_model = new QSortFilterProxyModel(this);
+		proxy_model->setSourceModel(model);
+		proxy_model->setDynamicSortFilter(true);
+		proxy_model->sort(ComponentPropModel::NAME_COL);
+		proxy_model->setFilterKeyColumn(ComponentPropModel::NAME_COL);
+		proxy_model->setFilterCaseSensitivity(Qt::CaseInsensitive);
+		view->setModel(proxy_model);
 
 		model->refresh();
-		component_view->hideColumn(EntityPropMetaModel::ID_COL);
+		view->hideColumn(ComponentPropModel::ID_COL);
 
-		auto save_selection = [component_view, component_proxy_model]() {
-
-			QStringList selected_ids;
-
-			for (const auto idx : component_view->selectionModel()->selectedIndexes()) {
-				selected_ids.push_back(component_proxy_model->data(component_proxy_model->index(idx.row(), EntityPropMetaModel::ID_COL)).toString());
-			}
-
-			component_view->setProperty("save_selection", selected_ids.join(":"));
-		};
-
-		auto restore_selection = [component_view, component_proxy_model]() {
-
-			QStringList selected_ids = component_view->property("save_selection").toString().split(":");
-
-			component_view->clearSelection();
-
-			for (int row = 0; row < component_proxy_model->rowCount(); ++row) {
-				QModelIndex idx = component_proxy_model->index(row, EntityPropMetaModel::ID_COL);
-				if (selected_ids.contains(component_proxy_model->data(idx).toString())) {
-					component_view->setCurrentIndex(component_proxy_model->index(row, EntityPropMetaModel::NAME_COL));
-					return;
-				}
-			}
-		};
-
-		connect(model, &QAbstractItemModel::modelAboutToBeReset, this, save_selection);
-		connect(model, &QAbstractItemModel::modelReset, this, restore_selection);		
+		connect(filter_line, &QLineEdit::textChanged, this, [proxy_model](const QString& value){
+			proxy_model->setFilterFixedString(value);
+		});
 
 		auto delete_row = new QAction(tr("Delete"), this);
 		addAction(delete_row);
 		delete_row->setShortcut(Qt::Key_Delete);
 		delete_row->setShortcutContext(Qt::WidgetWithChildrenShortcut);
-		connect(delete_row, &QAction::triggered, [component_view, model, component_proxy_model, &controller](bool){
+		connect(delete_row, &QAction::triggered, [view, model, proxy_model, &controller](bool){
 
 			auto perform = [&]() -> Result<> {
 				auto t = controller.createTransaction("Delete property");
 
-				for (auto index : component_view->selectionModel()->selectedRows()) {
-					QString id = component_proxy_model->data(component_proxy_model->index(index.row(), EntityPropMetaModel::ID_COL)).toString();
+				for (auto index : view->selectionModel()->selectedRows()) {
+					QString id = proxy_model->data(proxy_model->index(index.row(), ComponentPropModel::ID_COL)).toString();
 
-					auto res = t.deleteRow("entity_prop", "id", id);
+					auto res = t.deleteRow("component_prop", "id", id);
 					if (res.failed())
 						return res.error();
 				}
@@ -320,15 +295,10 @@ namespace sg {
 				model->refresh();
 			}
 		});
-		component_group->setLayout(component_group_layout);
-		component_group->show();
-
-		scroll_area->setWidget(scroll_area_widget);
-		scroll_area_widget->show();
 
 		setContextMenuPolicy(Qt::ActionsContextMenu);
 	}
 
-	EntityPropertyEditor::~EntityPropertyEditor() {
+	ComponentEditor::~ComponentEditor() {
 	}
 }

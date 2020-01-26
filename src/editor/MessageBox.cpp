@@ -51,12 +51,11 @@ namespace sg {
 		ok_button->setDefault(true);
 		layout->addWidget(ok_button, 0, Qt::AlignHCenter);
 		setLayout(layout);
-
 	}
 
 	void MessageBoxCritical(QString title, QString message, QString info) {
 		if (gMessageBoxSilenceScope == 0) {
-			printf("%s: %s\n", title.toStdString().c_str(), message.toStdString().c_str());
+			printf("%s: %s %s\n", title.toStdString().c_str(), message.toStdString().c_str(), info.toStdString().c_str());
 			MessageBox mb(std::move(title), std::move(message), std::move(info));
 			mb.exec();
 

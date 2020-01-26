@@ -12,10 +12,10 @@
 #include <QSqlQueryModel>
 #include <QSqlError>
 
-#include "ComponentMetaEditor.h"
-#include "ComponentPropertyMetaEditor.h"
+#include "ComponentList.h"
+#include "ComponentEditor.h"
+#include "EntityList.h"
 #include "EntityEditor.h"
-#include "EntityPropertyEditor.h"
 #include "Controller.h"
 #include "MessageBox.h"
 
@@ -61,8 +61,8 @@ namespace sg {
 
 	MainWindow::MainWindow(Controller& controller)
 	: mController(controller)
-	, mComponentMetaEditor(new ComponentMetaEditor(controller, this))
-	, mEntityEditor(new EntityEditor(controller, this))
+	, mComponentList(new ComponentList(controller, this))
+	, mEntityList(new EntityList(controller, this))
 	, mMdiArea(new QMdiArea(this))
 	{
 		setWindowTitle(tr("Editor"));
@@ -86,23 +86,23 @@ namespace sg {
 		};
 
 		new_dock_widget(
-			"Component Meta",
+			"Component",
 			Qt::LeftDockWidgetArea,
-			mComponentMetaEditor
+			mComponentList
 		);
 
-		connect(mComponentMetaEditor, &ComponentMetaEditor::opened, [&](const QVariant& component_id){
-			this->openResource<ComponentPropertyMetaEditor>("component", "name", "id", component_id);
+		connect(mComponentList, &ComponentList::opened, [&](const QVariant& component_id){
+			this->openResource<ComponentEditor>("component", "name", "id", component_id);
 		});
 
-		connect(mEntityEditor, &EntityEditor::opened, [&](const QVariant& component_id){
-			this->openResource<EntityPropertyEditor>("entity", "name", "id", component_id);
+		connect(mEntityList, &EntityList::opened, [&](const QVariant& component_id){
+			this->openResource<EntityEditor>("entity", "name", "id", component_id);
 		});
 
 		new_dock_widget(
-			"Entities",
+			"Entity",
 			Qt::LeftDockWidgetArea,
-			mEntityEditor
+			mEntityList
 		);
 
 		auto undo_act = new QAction(tr("&Undo"), this);
@@ -141,7 +141,7 @@ namespace sg {
 
 		settings.beginGroup("MainWindow");
 		restoreGeometry(settings.value("geometry").toByteArray());
-		// restoreState(settings.value("state").toByteArray());
+		restoreState(settings.value("state").toByteArray());
 	}
 
 	void MainWindow::closeEvent(QCloseEvent *event) {

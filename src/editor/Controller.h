@@ -49,6 +49,7 @@ namespace sg {
 		ResultError error() { return mResult.error(); }
 
 		Result<> commit();
+		bool hasCommands() const;
 
 		// returns the new primary key
 		Result<QVariant> insert(const QString& table_name, const QMap<QString, QVariant>& values, const QString& primary_key);

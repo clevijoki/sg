@@ -10,6 +10,8 @@
 #include "Controller.h"
 #include "Connection.h"
 #include "CodeGenerator.h"
+#include "InitialSetup.h"
+
 
 
 namespace sg {
@@ -87,172 +89,25 @@ int main(int argc, char** argv)
 
 	Controller controller(*res);
 
-	typedef Result<> (*create_fn)(Transaction&);
-
-	QMap<QString, create_fn> required_tables;
-
-	required_tables["prop_editor"] = [](Transaction &t) -> Result<> {
-		auto res = t.createTable("prop_editor", {"name VARCHAR(32) PRIMARY KEY NOT NULL, type VARCHAR(32)"});
-		if (res.failed())
-			return res.error();
-
-		auto res2 = t.insert("prop_editor", {{"name", "Default"}, {"type", "int"}}, "name");
-		if (res2.failed())
-			return res2.error();
-
-		return Ok();
-	};
-
-	required_tables["component"] = [](Transaction &t) -> Result<> {
-		return t.createTable("component", {"id SERIAL PRIMARY KEY", "name VARCHAR(64) NOT NULL"});
-	};
-
-	required_tables["component_prop"] = [](Transaction &t) -> Result<> {
-		return t.createTable("component_prop", {
-			"id SERIAL PRIMARY KEY",
-			"component_id INTEGER REFERENCES component(id)",
-			"name VARCHAR(128) NOT NULL CONSTRAINT name_cannot_contain_whitespace CHECK (strpos(name, ' ') = 0)",
-			"type VARCHAR(32) NOT NULL",
-			"default_value TEXT",
-			"UNIQUE(component_id, name)",
-		});
-	};
-
-	required_tables["entity"] = [](Transaction &t) -> Result<> {
-		return t.createTable(
-			"entity",
-			{
-				"id SERIAL PRIMARY KEY",
-				"name VARCHAR(64) NOT NULL"
-			}
-		);
-	};
-
-	required_tables["entity_component"] = [](Transaction &t) -> Result<> {
-		return t.createTable(
-			"entity_component",
-			{
-				"id SERIAL PRIMARY KEY",
-				"name VARCHAR(64) NOT NULL",
-				"component_id INTEGER REFERENCES component(id)",
-			}
-		);
-	};
-
-	required_tables["entity_component_prop"] = [](Transaction &t) -> Result<> {
-		return t.createTable(
-			"entity_component_prop",
-			{
-				"id SERIAL PRIMARY KEY",
-				"entity_component_id INTEGER REFERENCES entity_component(id)",
-				"component_prop_id INTEGER REFERENCES component_prop(id)",
-				"value TEXT",
-			}
-		);
-	};
-
-	required_tables["entity_prop"] = [](Transaction &t) -> Result<> {
-
-		return t.createTable(
-			"entity_prop",
-			{
-				"id SERIAL PRIMARY KEY",
-				"entity_id INTEGER REFERENCES entity(id)",
-				"name VARCHAR(64) NOT NULL",
-				"type VARCHAR(32) NOT NULL",
-				"default_value TEXT",
-				"UNIQUE(name, entity_id)",
-			}
-		);
-	};
-
-	required_tables["entity_prop_link_ops"] = [](Transaction& t) -> Result<> {
-		auto res = t.createTable(
-			"entity_prop_link_ops",
-			{
-				"name VARCHAR(32) PRIMARY KEY"
-			}
-		);
-
-		if (res.failed())
-			return res.error();
-
-		auto insert_res = t.insert(
-			"entity_prop_link_ops",
-			{
-				{"name", "set"},
-				{"name", "add"},
-				{"name", "subtract"},
-				{"name", "preset"},
-			},
-			"name"
-		);
-
-		if (insert_res.failed())
-			return insert_res.error();
-
-		return Ok();
-	};
-
-	// this sets up entity "scripting" where specific entity interface values
-	// do specific actions to the target values
-	required_tables["entity_prop_link"] = [](Transaction &t) -> Result<> {
-		return t.createTable(
-			"entity_prop_link",
-			{
-				"id SERIAL PRIMARY KEY",
-				"entity_prop_id INTEGER REFERENCES entity(id)",
-				"entity_component_id INTEGER REFERENCES entity_component(id)",
-				"component_prop_id INTEGER REFERENCES component_prop(id)",
-				"operation VARCHAR(32) NOT NULL REFERENCES entity_prop_link_ops(name)", 
-				"UNIQUE(entity_prop_id, entity_component_id, component_prop_id)"
-			}
-		);
-	};
-
-	// check to see if we have our required tables, and if not, prompt to create them
-	const auto tables = res->tables();
-
-	bool needs_tables = false;
-	QStringList missing_tables;
-
-	for (const QString& table : tables) {
-
-		if (!required_tables.contains(table)) {
-			missing_tables.push_back(table);
-		}
-	}
-
-	if (!missing_tables.isEmpty()) {
-
-		if (MessageBoxQuestion(MainWindow::tr("Perform initial setup?"), MainWindow::tr("Missing tables '%1'").arg(missing_tables.join(", "))) == QMessageBox::No) {
+	{
+		auto setup_res = PerformInitialSetup(controller);
+		if (setup_res.failed()) {
+			MessageBoxCritical(MainWindow::tr("Unable to perform initial setup"), setup_res.errorMessage(), setup_res.errorInfo());
 			return -1;
-		}
-
-		auto t = controller.createTransaction(MainWindow::tr("Initial setup"));
-
-		for (const QString& table : missing_tables) {
-			required_tables[table](t);
-		}
-
-		auto res = t.commit();
-		if (res.failed()) {
-			MessageBoxCritical(MainWindow::tr("Unable to perform initial setup"), res.errorMessage(), res.errorInfo());
-			return -1;
-		}
+		} 
 	}
 
 	if (parser.isSet(codegen_header) || parser.isSet(codegen_cpp)) {
-		auto res = sg::GenerateComponentFiles(
+		auto gen_res = sg::GenerateComponentFiles(
 			controller.createTransaction("Generate Headers"),
 			parser.value(codegen_header),
 			parser.value(codegen_cpp)
 		);
 
-		if (res.failed()) {
-			qCritical() << res.errorMessage();
-			if (!res.errorInfo().isEmpty()) {
-				qCritical() << res.errorInfo();
+		if (gen_res.failed()) {
+			qCritical() << gen_res.errorMessage();
+			if (!gen_res.errorInfo().isEmpty()) {
+				qCritical() << gen_res.errorInfo();
 			}
 
 			return -1;

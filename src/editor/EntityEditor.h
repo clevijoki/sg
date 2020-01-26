@@ -7,10 +7,7 @@ namespace sg {
 		Q_OBJECT
 
 	public:
-		EntityEditor(class Controller& controller, QWidget* parent);
+		EntityEditor(class Controller& controller, QVariant component_id, QWidget* parent);
 		~EntityEditor();
-
-	signals:
-		void opened(const QVariant& component_id);
 	};
 }
