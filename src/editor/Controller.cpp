@@ -14,15 +14,6 @@
 
 namespace sg {
 
-	namespace table {
-		const QString COMPONENT = "component";
-		const QString COMPONENT_PROP = "component_prop";	
-		const QString EDITOR_INT = "editor_int";		
-		const QString EDITOR_REAL = "editor_real";		
-		const QString EDITOR_TEXT = "editor_text";		
-	}
-
-
 	static QString ColumnStr(const QList<QString>& columns) {
 		QString result;
 
@@ -80,6 +71,15 @@ namespace sg {
 			case QMetaType::UShort:
 			case QMetaType::Float:
 				return value.toString();
+
+			case QMetaType::QPoint: {
+				auto p = value.toPoint();
+				return QString("'(%1, %2)'").arg(p.x()).arg(p.y());
+			}
+			case QMetaType::QPointF: {
+				auto p = value.toPointF();
+				return QString("'(%1, %2)'").arg(p.x()).arg(p.y());
+			}
 
 			default:
 				return ToSqlStringLiteral(value.toString());
@@ -159,10 +159,12 @@ namespace sg {
 			}
 
 			mResult = Error(QWidget::tr("Error comitting"), mConnection->lastError().text());
-
 		}
 
-		return mResult.error();		
+		if (mResult.failed())
+			return mResult.error();
+
+		return Error("Internal error, transaction using invalid connection");
 	}
 
 	Result<> Transaction::commit() {

@@ -122,9 +122,9 @@ namespace sg {
 		model->refresh();
 		// list_view->setColumnHidden(ComponentMetaModel::ID_COL);
 
-		connect(filter, &QLineEdit::textChanged, this, [proxy_model](const QString& value){
-			proxy_model->setFilterFixedString(value);
-		});
+			connect(filter, &QLineEdit::textChanged, this, [proxy_model](const QString& value){
+				proxy_model->setFilterFixedString(value);
+			});
 
 		auto save_selection = [list_view, proxy_model]() {
 

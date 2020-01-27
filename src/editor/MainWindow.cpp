@@ -11,6 +11,7 @@
 #include <QMdiSubWindow>
 #include <QSqlQueryModel>
 #include <QSqlError>
+#include <QTabBar>
 
 #include "ComponentList.h"
 #include "ComponentEditor.h"
@@ -65,7 +66,7 @@ namespace sg {
 	, mEntityList(new EntityList(controller, this))
 	, mMdiArea(new QMdiArea(this))
 	{
-		setWindowTitle(tr("Editor"));
+		setWindowTitle(tr("SG Edit"));
 
 		setCentralWidget(mMdiArea);
 		mMdiArea->setViewMode(QMdiArea::TabbedView);
@@ -73,6 +74,10 @@ namespace sg {
 		mMdiArea->setTabsMovable(true);
 		mMdiArea->setDocumentMode(true);
 		mMdiArea->setObjectName("MdiArea");
+
+		for (QTabBar *tb : mMdiArea->findChildren<QTabBar*>()) {
+			tb->setExpanding(false);
+		}
 
 		auto edit_menu = menuBar()->addMenu(tr("&Edit"));
 		auto view_menu = menuBar()->addMenu(tr("&View"));

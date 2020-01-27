@@ -26,19 +26,10 @@ namespace sg {
 		QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex& index) const override {
 
 			auto cb = new QComboBox(parent);
-			cb->addItems({
-				"i8",
-				"u8",
-				"i16",
-				"u16",
-				"i32",
-				"u32",
-				"f32",
-				"f64",
-				"text",
-				"component",
-				"component_ref",
-			});
+
+			QSqlQueryModel *m = new QSqlQueryModel(cb);
+			m->setQuery("SELECT name FROM prop_type");
+			cb->setModel(m);
 
 			return cb;
 		}

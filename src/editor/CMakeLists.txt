@@ -22,11 +22,14 @@ add_executable(editor
 	CodeGenerator.cpp
 	ComponentEditor.cpp
 	ComponentList.cpp
+	ComponentSelector.cpp
 	ConnectDialog.cpp
 	Connection.cpp
 	Controller.cpp
 	EntityEditor.cpp
 	EntityList.cpp
+	EntitySelector.cpp
+	EntityGraphicsScene.cpp
 	InitialSetup.cpp
 	MainWindow.cpp
 	MessageBox.cpp

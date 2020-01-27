@@ -3,6 +3,8 @@
 #include "MainWindow.h"
 #include "MessageBox.h"
 #include <QSqlQueryModel>
+#include <QSqlQuery>
+#include <QSqlError>
 #include <iterator>
 
 namespace sg {
@@ -12,7 +14,7 @@ namespace sg {
 		QStringList columns;
 	};
 
-	static const char* DEFAULT_TYPES[] = {"i8","u8","i16","u16","i32","u32","f32","f64","text","component"};
+	static const char* DEFAULT_TYPES[] = {"i8","u8","i16","u16","i32","u32","f32","f64","text","component", "point2d", "point3d", "scale2d", "scale3d", "rotation2d", "rotation3d"};
 
 	const RequiredTable REQURIED_TABLES[] = {
 		{
@@ -62,9 +64,10 @@ namespace sg {
 				"name VARCHAR(64) NOT NULL",
 				"entity_id INTEGER REFERENCES entity(id)",
 				"component_id INTEGER REFERENCES component(id)",
+				"graph_pos POINT",
 			}
 		}, {
-			"entity_component_prop",
+			"entity_component_override",
 			{
 				"id SERIAL PRIMARY KEY",
 				"entity_component_id INTEGER REFERENCES entity_component(id)",
@@ -77,10 +80,11 @@ namespace sg {
 				"id SERIAL PRIMARY KEY",
 				"name VARCHAR(64) NOT NULL",
 				"entity_id INTEGER REFERENCES entity(id)",
-				"component_id INTEGER REFERENCES component(id)",
+				"child_id INTEGER REFERENCES entity(id)",
+				"graph_pos POINT",
 			}
 		}, {
-			"entity_child_prop",
+			"entity_child_override",
 			{
 				"id SERIAL PRIMARY KEY",
 				"entity_child_id INTEGER REFERENCES entity_child(id)",
@@ -164,8 +168,17 @@ namespace sg {
 
 			// remove all old tables in reverse
 			for (auto itr = std::rbegin(REQURIED_TABLES); itr != std::rend(REQURIED_TABLES); ++itr) {
-				if (existing_tables.contains(itr->name)) {
 
+				// also capture id sequence
+				QString id_seq = QString("%1_id_seq").arg(itr->name);
+				if (existing_tables.contains(id_seq)) {
+
+					QSqlQueryModel *existing_table_values = new QSqlQueryModel();
+					existing_values[id_seq] = existing_table_values;
+					existing_table_values->setQuery(QString("SELECT * FROM \"%1\"").arg(id_seq), *t.connection());
+				}
+
+				if (existing_tables.contains(itr->name)) {
 
 					QSqlQueryModel *existing_table_values = new QSqlQueryModel();
 					existing_values[itr->name] = existing_table_values;
@@ -213,7 +226,30 @@ namespace sg {
 
 					if (insert_res.failed())
 						return insert_res.error();
-				}					
+				}
+
+				// restore id_seq
+				QString id_seq = QString("%1_id_seq").arg(rt.name);
+				QSqlQueryModel *existing_id_seq_values = existing_values[id_seq];
+				if (!existing_id_seq_values || existing_id_seq_values->rowCount() != 1)
+					continue;
+
+				// update the id_seq
+				{
+					QMap<QString, QVariant> values;
+
+					for (int col = 0; col < existing_id_seq_values->columnCount(); ++col) {
+						values[existing_id_seq_values->headerData(col, Qt::Horizontal).toString()] = existing_id_seq_values->data(existing_id_seq_values->index(0, col));
+					}
+
+					QVariant old_value = values["last_value"];
+					QString statement = QString("ALTER SEQUENCE %1 RESTART WITH %2").arg(id_seq).arg(ToSqlLiteral(old_value));
+					QSqlQuery q(statement, *t.connection());
+
+					if (q.lastError().isValid()) {
+						return Error(q.lastError().text(), statement);
+					}
+				}
 			}
 
 			for (QSqlQueryModel* m : existing_values) {
@@ -240,7 +276,7 @@ namespace sg {
 
 				auto insert_res = t.insert("prop_type", {{"name", name}}, "name");
 				if (insert_res.failed())
-					return insert_res.error();						
+					return insert_res.error();
 			}
 		}
 
