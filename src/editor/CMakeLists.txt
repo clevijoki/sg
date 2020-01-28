@@ -16,7 +16,7 @@ set(GTEST_ROOT "${CMAKE_SOURCE_DIR}/dependencies/googletest")
 
 find_package(Qt5 COMPONENTS Widgets Sql REQUIRED)
 
-add_executable(editor WIN32
+add_executable(editor
 	main.cpp
 	CodeGenerator.cpp
 	ComponentEditor.cpp

@@ -690,10 +690,14 @@ namespace sg {
 		// game_viewport->setStyleSheet("background-color:green;");
 		// tab_widget->addTab(game_viewport, "Game");
 
-		auto graph_scene = new EntityGraphicsScene(entity_id, this);
+		auto graph_scene = new EntityGraphicsScene(controller, entity_id, this);
 
 		auto graph_view = new QGraphicsView();
+		// graph_view->setDragMode(QGraphicsView::ScrollHandDrag);
 		graph_view->setScene(graph_scene);
+		graph_view->setCacheMode(QGraphicsView::CacheBackground);
+		graph_view->setResizeAnchor(QGraphicsView::AnchorUnderMouse);
+
 		tab_widget->addTab(graph_view, "Setup");
 
 		auto ecm = new EntityComponentModel(entity_id, this);
@@ -708,7 +712,7 @@ namespace sg {
 				auto t = controller.createTransaction("Query Component");			
 				ComponentSelector cs(t, this);
 
-				QPointF new_point = graph_view->mapToScene(QCursor::pos());
+				QPointF new_point = graph_view->mapFromGlobal(QCursor::pos());
 
 				if (cs.exec() == QDialog::Accepted) {
 					auto res = ecm->addNew(t, cs.selectedId(), new_point);

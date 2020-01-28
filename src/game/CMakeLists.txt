@@ -16,7 +16,7 @@ if (MSVC)
 		debug msvcrtd
 		debug msvcprtd
 		optimized ucrt
-		optimized vcruntime
+		optimized libvcruntime
 		optimized msvcrt
 		optimized msvcprt
 	)

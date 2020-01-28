@@ -6,6 +6,7 @@
 #include <QSet>
 #include <QMap>
 #include <QVariant>
+#include <QPointF>
 
 #include <memory>
 #include <vector>
@@ -15,6 +16,7 @@ namespace sg {
 	// will convert "This isn't cool" to E'This isn\'t cool'
 	QString ToSqlStringLiteral(QString str);
 	QString ToSqlLiteral(QVariant value);
+	QPointF ToQPointF(QVariant value);
 
 	class ICommand {
 	public:

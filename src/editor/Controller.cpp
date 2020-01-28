@@ -55,6 +55,32 @@ namespace sg {
 		return result;
 	}
 
+	QPointF ToQPointF(QVariant value) {
+
+		float x, y;
+
+		QString current;
+		for (QChar c : value.toString()) {
+
+			if (c == '(' || c == ' ')
+				continue;
+			if (c == ',') {
+				x = current.toFloat();
+
+				current.clear();
+			} else if (c == ')') {
+
+				y = current.toFloat();
+
+				return QPointF(x, y);
+			} else {
+				current += c;
+			}
+		}
+
+		return QPointF(0,0);
+	}
+
 	QString ToSqlLiteral(QVariant value) {
 		QMetaType::Type t = static_cast<QMetaType::Type>(value.type());
 
@@ -1020,4 +1046,15 @@ TEST(Controller, CmdRenameTable) {
 
 	EXPECT_FALSE(db.tables().contains("cmd_rename_table_1"));
 	EXPECT_TRUE(db.tables().contains("cmd_rename_table_2"));
+}
+
+TEST(Controller, ToQPointF) {
+
+	QPointF res = sg::ToQPointF("(1, 2)");
+	EXPECT_EQ(1, res.x());
+	EXPECT_EQ(2, res.y());
+
+	QPointF res2 = sg::ToQPointF("(1.1, 2.2)");
+	EXPECT_EQ(1.1f, res2.x());
+	EXPECT_EQ(2.2f, res2.y());
 }

@@ -18,15 +18,9 @@ Games like Noita (https://noitagame.com/) which can only function because of a c
 * Some property types (Position2D, Position3D, Transform2D, Transform3D) will be understood by SG to produce editor widgets to drag and scale elements
 * The game can appear in the editor viewport by inserting an interface library which can direct how it should behave, load specific scenes, set the camera transform and pause gameplay when necessary. The game runs as a separate process, so even if it crashes it won't bring down SG Edit. An overlay that contains the SG editor widgets will be placed over top of the game. This means the game can run with the same basic update loop using the same rendering logic as it does in the final product.
 
-# Requirements
-
-* PostgreSQL (https://www.postgresql.org/)
-* CMake (https://cmake.org/)
-* Ninja Build (https://ninja-build.org/) (Optional, but it is my preferred companion to CMake)
-* Qt5 (https://www.qt.io/)
-* SDL2 (https://www.libsdl.org/) (For example game only)
-
 # Database Setup
+
+All platforms need PostgreSQL to be installed (https://www.postgresql.org/). Follow the instructions there for your OS.
 
 Under Windows:
 
@@ -52,9 +46,32 @@ Under Linux:
 
 # Building from source
 
-I recommend building into a separate directory, change into the folder you want to build into, I use `sg/build/debug` and `sg/build/release` and then run `cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja`. I automate this with sublime build systems.
+## Build requirements
 
-Under windows, CMake has to copy the postgres dlls from the postgres build directory. 
+* CMake (https://cmake.org/)
+* Ninja Build (https://ninja-build.org/) (Optional, but it is my preferred companion to CMake, it must be on your path)
+* Qt5 (https://www.qt.io/)
+
+## Setup
+
+The first time you build, you will need to grab some dependencies (googletest and SDL), which are setup to be pulled automatically with git submodules:
+```
+git submodule init
+git submodule update
+```
+
+### Windows
+
+Under windows only, CMake has to have additional information, these environment variables must be set. These are what they are on my PC:
+
+```
+Qt5_DIR = C:\Qt\5.14.0\msvc2017_64\lib\cmake\Qt5
+POSTGRES_BIN_DIR = C:\Program Files\PostgreSQL\12\bin
+```
+
+## Building w/ Ninja
+
+I have been building outputs in a separate directory, change into the folder you want to build into, I use `sg/build/debug` and `sg/build/release` and then run `cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja`. I automate this with sublime build systems.
 
 # Prebuilt binaries
 
