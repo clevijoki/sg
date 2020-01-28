@@ -1,2 +1,5 @@
-build/
+build/debug/*
+build/release/*
 sg.sublime-workspace
+!build/debug/keepdir.txt
+!build/release/keepdir.txt
