@@ -671,7 +671,12 @@ namespace sg {
 
 		if (!result.isOpen()) {
 			result = QSqlDatabase::addDatabase("QPSQL");
-			result.setDatabaseName("unittest");
+			result.setDatabaseName("sg_unittest");
+
+#if WIN32
+			result.setUserName("sg_unittest");
+			result.setPassword("sg_unittest_pw");
+#endif
 
 			EXPECT_TRUE(result.open());
 		}

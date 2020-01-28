@@ -26,25 +26,39 @@ Games like Noita (https://noitagame.com/) which can only function because of a c
 * Qt5 (https://www.qt.io/)
 * SDL2 (https://www.libsdl.org/) (For example game only)
 
-# Setup
+# Database Setup
 
-1. Install PostgreSQL and start it
-2. you need to create a user name and a database for the game content.
-```
-CREATE DATABASE test_game;
-```
-3. Build
-```
-mkdir build
-cd build
-mkdir debug
-cd debug
-cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src
-ninja
-./editor/editor --test
-```
-4. The first time you launch SG Edit, it will prompt you to login, use the `test_game` database you created earlier. 
-5. It will also prompt you to create the built in tables it needs, just click yes.
+Under Windows:
+
+* Run "SQL Shell (psql)" from the start menu
+* Login using the password that was setup at start to login as `postgres`. Leave the rest at default. 
+* psql: `CREATE USER sg_edit WITH PASSWORD 'sg_edit_password';` (or your password of choice)
+* psql: `CREATE DATABASE sg_game WITH OWNER sg_edit;` 
+* psql: `CREATE USER sg_unittest WITH PASSWORD 'sg_unittest_pw';` (optional: this is for unit tests)
+* psql: `CREATE DATABSE sg_unittest WITH OWNER sg_unittest;` (optional: if you did the above step)
+* psql: `\q` to quit 
+* You should now be able to run `psql` with your new username/password/database combo.
+
+Under Linux:
+
+* Run `su - postgres` to login as the postgres user, enter your password
+* Run `psql` to open the default username/database
+* psql `CREATE USER {your_linux_username}`, using your linux username
+* psql `CREATE DATABASE sg_edit WITH OWNER {your_linux_username}`, using your linux username
+* psql `CREATE DATABASE sg_unittest WITH OWNER {your_linux_username}`, using your linux username
+* psql `\q` to quit
+* Run `exit` to log back into your normal username.
+* You should now be a use `psql -d sg_edit` to log into your default username. 
+
+# Building from source
+
+I recommend building into a separate directory, change into the folder you want to build into, I use `sg/build/debug` and `sg/build/release` and then run `cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja`. I automate this with sublime build systems.
+
+Under windows, CMake has to copy the postgres dlls from the postgres build directory. 
+
+# Prebuilt binaries
+
+TODO
 
 # Why SQL?
 

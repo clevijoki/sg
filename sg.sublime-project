@@ -2,18 +2,40 @@
 	"build_systems":
 	[
 		{
-			"name":"SG Debug",
-			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja && ./editor/editor --test",
+			"name":"SG Debug Linux",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja && $project_path/build/debug/editor/editor --test",
 			"working_dir":"$project_path/build/debug",
 			"file_regex":"^([^:]+):(\\d+):?(\\d+)?: (.+)",
-			"syntax":"cmakelog.sublime-syntax"
+			"syntax":"cmakelog.sublime-syntax",
 		},
 		{
-			"name":"SG Release",
-			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Release -GNinja -Wno-dev ../../src && ninja && ./editor/editor --test",
-			"working_dir":"$project_path/build/debug",
+			"name":"SG Release Linux",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Release -GNinja -Wno-dev ../../src && ninja && $project_path/build/release/editor/editor --test",
+			"working_dir":"$project_path/build/release",
 			"file_regex":"^([^:]+):(\\d+):?(\\d+)?: (.+)",
-			"syntax":"cmakelog.sublime-syntax"
+			"syntax":"cmakelog.sublime-syntax",
+		},
+		{
+			"name":"SG Debug Windows",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Debug -GNinja -Wno-dev ../../src && ninja && $project_path/build/debug/editor/editor --test",
+			"working_dir":"$project_path/build/debug",
+			"file_regex":"^(.+)[\\(](\\d+)[\\)]: (.+)",
+			"syntax":"cmakelog.sublime-syntax",
+			"env":{
+				"Qt5_DIR" : "C:\\Qt\\5.14.0\\msvc2017_64\\lib\\cmake\\Qt5",
+				"POSTGRES_BIN_DIR" : "C:\\Program Files\\PostgreSQL\\12\\bin",
+			}
+		},
+		{
+			"name":"SG Release Windows",
+			"shell_cmd":"cmake -DCMAKE_BUILD_TYPE=Release -GNinja -Wno-dev ../../src && ninja && $project_path/build/release/editor/editor --test",
+			"working_dir":"$project_path/build/release",
+			"file_regex":"^(.+)[\\(](\\d+)[\\)]: (.+)",
+			"syntax":"cmakelog.sublime-syntax",
+			"env":{
+				"Qt5_DIR" : "C:\\Qt\\5.14.0\\msvc2017_64\\lib\\cmake\\Qt5",
+				"POSTGRES_BIN_DIR" : "C:\\Program Files\\PostgreSQL\\12\\bin",
+			}
 		}
 	],
 	"folders":

@@ -1,0 +1,6 @@
+[submodule "src/dependencies/googletest"]
+	path = src/dependencies/googletest
+	url = https://github.com/google/googletest.git
+[submodule "src/dependencies/SDL"]
+	path = src/dependencies/SDL
+	url = https://github.com/SDL-mirror/SDL.git

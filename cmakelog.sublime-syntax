@@ -3,6 +3,8 @@
 name: cmakelog
 scope: text.cmakelog
 
+# this is a quick and dirty log syntax that can find build errors
+
 contexts:
   main:
     - match: ^(\[\d+/\d+\]) (.*)
@@ -16,6 +18,19 @@ contexts:
         1: markup.underline.link.cmakelog
         2: constant.numeric.cmakelog
         3: constant.numeric.cmakelog
+      push:
+        - match: error[:].*
+          scope: keyword.control.cmakelog
+        - match: warning[:].*
+          scope: string.cmakelog
+        - match: note[:].*
+          scope: string.cmakelog
+        - match: \n
+          pop: true
+    - match: ^(.+)\(\d+\)[:] 
+      captures:
+        1: markup.underline.link.cmakelog
+        2: constant.numeric.cmakelog
       push:
         - match: error[:].*
           scope: keyword.control.cmakelog
