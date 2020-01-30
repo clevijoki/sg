@@ -8,7 +8,9 @@
 #include <QGraphicsItemGroup>
 #include <QGraphicsDropShadowEffect>
 #include <QGraphicsProxyWidget>
+#include <QGraphicsSceneMouseEvent>
 #include <QLineEdit>
+#include <QTransform>
 
 #include "Controller.h"
 
@@ -21,17 +23,54 @@ namespace sg {
 	const float PIN_SIZE = 13;
 	const QMargins PIN_BORDER(7,7,7,7);
 
+	class ConnectionItem : public QGraphicsItem {
+		class PinItem &mSource;
+		class PinItem &mTarget;
+	public:
+		ConnectionItem(Controller &controller, PinItem &source, PinItem &target) 
+		: mSource(source)
+		, mTarget(target){
+		}
+
+		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget* widget) override;
+	};
+
+	class PreviewConnectionItem : public QGraphicsItem {
+		class PinItem &mSource;
+		QPointF mTarget;
+	public:
+		PreviewConnectionItem(Controller &controller, PinItem &source, QPointF target) 
+		: mSource(source)
+		, mTarget(target){
+		}
+
+		void setTarget(const QPointF target) {
+			mTarget = target;
+		}
+
+		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget* widget) override;
+	};
+
 	class PinItem : public QGraphicsItem {
+
+		Controller &mController;
 
 		QRectF mBounds;
 		QRectF mDrawBounds;
 		QBrush mBrush;
 
+		QVariant mId;
+		QString mType;
+
 	public:
-		PinItem(float size, QGraphicsItem *parent)
-		: QGraphicsItem(parent) {
+		PinItem(Controller& controller, float size, QString type, QVariant id, QGraphicsItem *parent = nullptr)
+		: QGraphicsItem(parent)
+		, mController(controller)
+		, mType(std::move(type))
+		, mId(std::move(id)) {
 			setSize(size);
 			setAcceptHoverEvents(true);
+			setPanelModality(QGraphicsItem::PanelModal);
 			mBrush = Qt::darkGray;
 		}
 
@@ -50,7 +89,7 @@ namespace sg {
 		}
 
 		void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override {
-			mBrush = Qt::gray;
+			mBrush = Qt::red;
 			update();
 		}
 
@@ -58,6 +97,12 @@ namespace sg {
 			mBrush = Qt::darkGray;
 			update();
 		}
+
+		void mousePressEvent(QGraphicsSceneMouseEvent *event) override {
+			event->accept();
+		}
+
+		void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 	};
 
 	struct ItemProperty {
@@ -72,6 +117,13 @@ namespace sg {
 	};
 
 	class ComponentEntityItem : public QGraphicsItem {
+		enum class EState {
+			Default,
+			Dragging,
+		};
+
+		Controller& mController;
+
 		QString mName, mComponentName;
 		QVariant mComponentId, mId;
 
@@ -83,13 +135,47 @@ namespace sg {
 		QRectF mNameBounds;
 		PinItem *mRefPin;
 
+		QLineEdit *mTitleEdit;
+		QGraphicsProxyWidget *mTitleProxy;
+
+		QPointF mAnchorPoint;
+		EState mState = EState::Default;
+
+		void setAnchorPoint(const QPointF& pt) {
+			mAnchorPoint = pt;
+		}
+
+		void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override {
+			mState = EState::Dragging;
+			QGraphicsItem::mouseMoveEvent(event);			
+		}
+
+		void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override {
+			if (mState == EState::Dragging) {
+				qDebug() << "Apply drag to " << pos();
+			} 
+
+			mState = EState::Default;
+
+			QGraphicsItem::mouseReleaseEvent(event);
+		}
+
 	public:
-		ComponentEntityItem(QString name, QString component_name, QVariant component_id, QVariant id) 
-		: mName(std::move(name)) 
+		ComponentEntityItem(Controller& controller, QString name, QString component_name, QVariant component_id, QVariant id, QGraphicsItem *parent = nullptr) 
+		: QGraphicsItem(parent)
+		, mController(controller)
+		, mName(std::move(name)) 
 		, mComponentName(std::move(component_name))
 		, mComponentId(std::move(component_id))
-		, mId(std::move(id))
-		, mRefPin(new PinItem(PIN_SIZE, this)) {
+		, mId(id)
+		, mRefPin(new PinItem(controller, PIN_SIZE, "object_ref", std::move(id), this))
+		, mTitleProxy(new QGraphicsProxyWidget(this))
+		, mTitleEdit(new QLineEdit(mName)) {
+
+			setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
+
+			mTitleProxy->setWidget(mTitleEdit);
+			mTitleEdit->setFont(TITLE_FONT);
 
 			// get all of our properties from the component_id
 			refresh();
@@ -100,24 +186,25 @@ namespace sg {
 			QSqlQueryModel m;
 			m.setQuery(QString("SELECT name, type, default_value, id FROM component_prop WHERE component_id = %1").arg(ToSqlLiteral(mComponentId)));
 
-
 			QFontMetrics title_fm(TITLE_FONT);
 			QFontMetrics prop_fm(PROP_FONT);
 
 			mComponentNameTitle = QString("%1:").arg(mComponentName);
 
-			mComponentNameBounds = title_fm.boundingRect(mComponentNameTitle).marginsAdded(QMargins(1,1,1,1));
-			mNameBounds = title_fm.boundingRect(mName).marginsAdded(QMargins(1,1,1,1));
+			mComponentNameBounds = title_fm.boundingRect(mComponentNameTitle).marginsAdded(QMargins(1,1,1,10));
+			mNameBounds = title_fm.boundingRect(mName);
 
 			mComponentNameBounds.moveTo(0,0);
 			mNameBounds.moveTo(mComponentNameBounds.right(), 0);
 
+			mTitleProxy->setGeometry(mNameBounds);
+
 			float height = std::max(mComponentNameBounds.bottom(), mNameBounds.bottom());
 
-			mRefPin->setSize(height);
-			mRefPin->setPos(mNameBounds.right(), 0);
+			mRefPin->setSize(prop_fm.height());
+			mRefPin->setPos(mNameBounds.right(), (height-prop_fm.height())/2);
 
-			float width = mNameBounds.right() + height;
+			float width = mNameBounds.right() + prop_fm.height();
 
 			const int row_count = m.rowCount();
 			float pin_label_width = 0;
@@ -126,11 +213,10 @@ namespace sg {
 				ItemProperty ip;
 				ip.name = m.data(m.index(row, 0)).toString();
 				ip.type = m.data(m.index(row, 1)).toString();
-				ip.default_value = m.data(m.index(row, 2)).toString();
-				ip.id = m.data(m.index(row, 3));
+		
 				ip.bounds = prop_fm.boundingRect(ip.name);
 				ip.bounds.moveTo(prop_fm.height(), height);
-				ip.pin = new PinItem(prop_fm.height(), this);
+				ip.pin = new PinItem(mController, prop_fm.height(), ip.type, m.data(m.index(row, 3)), this);
 				ip.pin->setPos(0, height);
 
 				ip.proxy = new QGraphicsProxyWidget(this);
@@ -140,6 +226,7 @@ namespace sg {
 
 				width = std::max<float>(width, ip.bounds.right());
 				pin_label_width = std::max<float>(pin_label_width, ip.bounds.right());
+
 				height = ip.bounds.bottom();
 
 				mProperties.push_back(std::move(ip));
@@ -159,8 +246,7 @@ namespace sg {
 		}
 
 		QRectF boundingRect() const override {
-			const qreal pen_width = 1;
-			return mBounds;
+			return mBounds.marginsAdded(QMargins(3,3,3,3));
 		}
 
 		void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget* widget) override {
@@ -173,16 +259,62 @@ namespace sg {
 			painter->drawRect(mBounds);
 
 			painter->setFont(TITLE_FONT);
-			painter->drawText(mComponentNameBounds, Qt::AlignTop | Qt::AlignLeft, mComponentNameTitle);
-			painter->drawText(mNameBounds, Qt::AlignTop | Qt::AlignLeft, mName);
+			painter->drawText(mComponentNameBounds, Qt::AlignVCenter | Qt::AlignLeft, mComponentNameTitle);
 
 			painter->setFont(PROP_FONT);
+
 			for (const ItemProperty& ip : mProperties) {
 				painter->drawText(ip.bounds, Qt::AlignLeft | Qt::AlignVCenter, ip.name);
 			}
 		}
+
+		const QVariant& id() const {
+			return mId;
+		}
+
+		const QVariant& componentId() const {
+			return mComponentId;
+		}
+
+
 	};
-	
+
+	void ConnectionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget* widget) {
+		painter->setBrush(Qt::NoBrush);
+		painter->setPen(QPen(Qt::blue, 3));
+
+		painter->drawLine(mSource.pos(), mTarget.pos());
+	}
+
+	void PreviewConnectionItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget* widget) {
+		painter->setBrush(Qt::NoBrush);
+		painter->setPen(QPen(Qt::blue, 3));
+
+		painter->drawLine(mSource.pos(), mTarget);
+	}
+
+	void PinItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+		event->accept();
+
+		ComponentEntityItem *source_component = dynamic_cast<ComponentEntityItem*>(parentItem());
+
+		if (QGraphicsItem* item = scene()->itemAt(event->scenePos(), QTransform())) {
+			if (PinItem* target_pin = dynamic_cast<PinItem*>(item)) {
+				if (ComponentEntityItem* target_component = dynamic_cast<ComponentEntityItem*>(target_pin->parentItem())) {
+					if (target_component != source_component) {
+						qDebug() << QString("Create new connection from id:%1 component_id:%2 property_id:%3 to id:%4 component_id:%5 property_id:%6")
+							.arg(source_component->id().toString())
+							.arg(source_component->componentId().toString())
+							.arg(mId.toString())
+							.arg(target_component->id().toString())
+							.arg(target_component->componentId().toString())
+							.arg(target_pin->mId.toString());
+					}
+				}
+			}
+		}
+	}
+
 	static void Refresh(EntityGraphicsScene& egs, class Controller& controller, QVariant entity_id) {
 		QSqlQueryModel m;
 		m.setQuery(QString("SELECT entity_component.name, component.name, component_id, entity_component.id, entity_component.graph_pos FROM entity_component INNER JOIN component on component.id = component_id WHERE entity_id = %1").arg(ToSqlLiteral(entity_id)));
@@ -195,10 +327,11 @@ namespace sg {
 		auto dse = new QGraphicsDropShadowEffect();
 		dse->setBlurRadius(32);
 		dse->setColor(Qt::lightGray);
-		all_nodes->setGraphicsEffect(dse);
+		// all_nodes->setGraphicsEffect(dse);
 
 		for (int row = 0; row < m.rowCount(); ++row) {
 			ComponentEntityItem *ei = new ComponentEntityItem(
+				controller,
 				m.data(m.index(row, 0)).toString(),
 				m.data(m.index(row, 1)).toString(),
 				m.data(m.index(row, 2)),

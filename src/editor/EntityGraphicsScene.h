@@ -2,6 +2,7 @@
 
 #include <QGraphicsItem>
 #include <QGraphicsScene>
+#include <memory>
 
 namespace sg {
 
@@ -9,6 +10,7 @@ namespace sg {
 		Q_OBJECT
 
 	public:
+
 		EntityGraphicsScene(class Controller& controller, QVariant entity_id, QObject *parent=nullptr);
 	};
 }

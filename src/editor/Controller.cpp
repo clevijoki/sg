@@ -704,7 +704,7 @@ namespace sg {
 			result.setPassword("sg_unittest_pw");
 #endif
 
-			EXPECT_TRUE(result.open());
+			EXPECT_TRUE(result.open()) << result.lastError().text().toStdString().c_str();
 		}
 
 		return result;			

@@ -52,6 +52,8 @@ int main(int argc, char** argv)
 	QCoreApplication::setOrganizationName("SG Editor");
 	QCoreApplication::setApplicationVersion("1");
 
+	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
 	QCommandLineParser parser;
 	parser.setApplicationDescription("SG Editor");
 	parser.addHelpOption();

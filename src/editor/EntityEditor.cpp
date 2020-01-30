@@ -257,7 +257,8 @@ namespace sg {
 					case ENTITY_CHILD_ROW: return "Entities";
 					case PROP_CHILD_ROW: return "Properties";
 					default: qDebug() << "Invalid top level index"; return QVariant("Bad Top Level Data");
-				}				
+				}
+
 			} else {
 
 				QModelIndex parent2 = parent.parent();
