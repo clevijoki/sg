@@ -1,4 +1,5 @@
 #include "ComponentEditor.h"
+#include "FormatString.h"
 
 #include <QTableView>
 #include <QSqlQueryModel>
@@ -63,7 +64,7 @@ namespace sg {
 	class ComponentPropModel : public QSqlQueryModel {
 
 		Controller& mController;
-		QVariant mComponentId;
+		const id_t mComponentId;
 	public:
 
 		static const int NAME_COL = 0;
@@ -71,17 +72,17 @@ namespace sg {
 		static const int DEFAULT_VALUE_COL = 2;
 		static const int ID_COL = 3;
 
-		ComponentPropModel(Controller& controller, QObject* parent, QVariant component_id)
+		ComponentPropModel(Controller& controller, QObject* parent, id_t component_id)
 		: QSqlQueryModel(parent)
 		, mController(controller)
-		, mComponentId(std::move(component_id))
+		, mComponentId(component_id)
 		{}
 
 		~ComponentPropModel() {
 		}
 
 		void refresh() {
-			setQuery(QString("SELECT name AS \"Name\", type AS \"Type\", default_value AS \"Default Value\", id FROM component_prop WHERE component_id = %1").arg(ToSqlLiteral(mComponentId)));
+			setQuery(QString("SELECT name AS \"Name\", type AS \"Type\", default_value AS \"Default Value\", id FROM component_prop WHERE component_id = %1").arg(qlonglong(mComponentId)));
 		}
 
 		bool containsName(const QString& name) const {
@@ -112,7 +113,7 @@ namespace sg {
 					return Ok(); // ignore value change
 
 				if (unique_check && containsName(new_value)) {
-					return Error(ComponentEditor::tr("Property '%1' '%2' already exists").arg(column_name).arg(new_value));
+					return Error("Property '"_sb + column_name + "' '" + new_value + "' already exists");
 				}
 
 				// want to rename the table and model table
@@ -177,7 +178,7 @@ namespace sg {
 		}
 	};
 	
-	ComponentEditor::ComponentEditor(Controller& controller, QVariant component_id, QWidget* parent)
+	ComponentEditor::ComponentEditor(Controller& controller, id_t component_id, QWidget* parent)
 	: QWidget(parent) {
 
 		auto layout = new QVBoxLayout(this);
@@ -216,7 +217,7 @@ namespace sg {
 				auto res = t.insert(
 					"component_prop",
 					{
-						{"component_id", component_id},
+						{"component_id", qlonglong(component_id)},
 						{"name", new_prop_name},
 						{"type", "i32"},
 						{"default_value", "0"}

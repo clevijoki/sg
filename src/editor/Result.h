@@ -1,8 +1,9 @@
 #pragma once
-#include <QString>
+#include "FormatString.h"
 
 namespace sg {
 
+	void FatalError(const char* msg, ...);
 
 	class VoidType {};
 	class ResultError;
@@ -11,14 +12,14 @@ namespace sg {
 	template<typename U> Result<U> Ok(U value);
 	Result<> Ok();
 
-	ResultError Error(QString message, QString info);
+	ResultError Error(StringBuilder message, StringBuilder info);
 
 	class ResultError {
 		template<typename U> friend class Result;
 
-		friend ResultError Error(QString, QString);
-		QString message;
-		QString info;
+		friend ResultError Error(StringBuilder, StringBuilder);
+		std::string message;
+		std::string info;
 	};
 
 	template<typename T>
@@ -100,35 +101,35 @@ namespace sg {
 
 		ResultError error() {
 			if (mStatus == Status::Success) {
-				qFatal("Result succeeded");
+				FatalError("Result succeeded");
 			}
 			return std::move(mError);
 		}
 
 		ResultError errorCopy() {
 			if (mStatus == Status::Success) {
-				qFatal("Result succeeded");
+				FatalError("Result succeeded");
 			}
 			return mError;
 		}
 
-		const QString errorMessage() {
+		const std::string& errorMessage() {
 			if (mStatus == Status::Success) {
-				qFatal("Result succeeded");
+				FatalError("Result succeeded");
 			}
 			return mError.message;
 		}
 
-		const QString errorInfo() {
+		const std::string& errorInfo() {
 			if (mStatus == Status::Success) {
-				qFatal("Result succeeded");
+				FatalError("Result succeeded");
 			}
 			return mError.info;			
 		}
 
 		void verify() {
 			if (failed()) {
-				qFatal("Result failed: %s", mError.message.toStdString().c_str());
+				FatalError("Result failed: %s", mError.message.c_str());
 			}
 		}
 
@@ -165,10 +166,10 @@ namespace sg {
 		return res;
 	}
 
-	inline ResultError Error(QString error_message, QString error_info = QString()) {
+	inline ResultError Error(StringBuilder error_message, StringBuilder error_info = StringBuilder()) {
 		ResultError res;
-		res.message = std::move(error_message);
-		res.info = std::move(error_info);
+		res.message = error_message.take();
+		res.info = error_info.take();
 		return res;
 	}
 }

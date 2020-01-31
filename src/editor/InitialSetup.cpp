@@ -161,7 +161,7 @@ namespace sg {
 				MainWindow::tr("Perform table setup?"),
 				version_mismatch ? MainWindow::tr("Table format has changed, data migration is necessary") : MainWindow::tr("Initial setup required")
 			) == QMessageBox::No) {
-				return Error(MainWindow::tr("Setup cancelled"));
+				return Error("Setup cancelled");
 			}
 
 			QMap<QString, QSqlQueryModel*> existing_values;

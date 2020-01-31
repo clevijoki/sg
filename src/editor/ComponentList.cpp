@@ -1,6 +1,7 @@
 #include "ComponentList.h"
 #include "Controller.h"
 #include "MessageBox.h"
+#include "FormatString.h"
 
 #include <QListView>
 #include <QSqlQueryModel>
@@ -63,7 +64,7 @@ namespace sg {
 					return Ok(); // ignore rename
 
 				if (containsName(new_name)) {
-					return Error(ComponentList::tr("Component named '%1' already exists").arg(new_name));
+					return Error("Component named '"_sb + new_name + "' already exists");
 				}
 
 				// want to rename the table and model table

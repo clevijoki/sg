@@ -1,0 +1,109 @@
+Determining if files OpenGL/glu.h exist failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_a5b5b"
+[1/2] Building C object CMakeFiles/cmTC_a5b5b.dir/HAVE_OPENGL_GLU_H.c.o
+FAILED: CMakeFiles/cmTC_a5b5b.dir/HAVE_OPENGL_GLU_H.c.o 
+/usr/bin/cc    -o CMakeFiles/cmTC_a5b5b.dir/HAVE_OPENGL_GLU_H.c.o   -c /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CheckIncludeFiles/HAVE_OPENGL_GLU_H.c
+/home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CheckIncludeFiles/HAVE_OPENGL_GLU_H.c:2:10: fatal error: OpenGL/glu.h: No such file or directory
+    2 | #include <OpenGL/glu.h>
+      |          ^~~~~~~~~~~~~~
+compilation terminated.
+ninja: build stopped: subcommand failed.
+
+Source:
+/* */
+#include <OpenGL/glu.h>
+
+
+int main(void){return 0;}
+
+Determining if files sys/stdtypes.h exist failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_8fcc4"
+[1/2] Building C object CMakeFiles/cmTC_8fcc4.dir/HAVE_SYS_STDTYPES_H.c.o
+FAILED: CMakeFiles/cmTC_8fcc4.dir/HAVE_SYS_STDTYPES_H.c.o 
+/usr/bin/cc    -o CMakeFiles/cmTC_8fcc4.dir/HAVE_SYS_STDTYPES_H.c.o   -c /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CheckIncludeFiles/HAVE_SYS_STDTYPES_H.c
+/home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CheckIncludeFiles/HAVE_SYS_STDTYPES_H.c:2:10: fatal error: sys/stdtypes.h: No such file or directory
+    2 | #include <sys/stdtypes.h>
+      |          ^~~~~~~~~~~~~~~~
+compilation terminated.
+ninja: build stopped: subcommand failed.
+
+Source:
+/* */
+#include <sys/stdtypes.h>
+
+
+int main(void){return 0;}
+
+Determining if the function strlcat exists failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_bbae4"
+[1/2] Building C object CMakeFiles/cmTC_bbae4.dir/CheckFunctionExists.c.o
+[2/2] Linking C executable cmTC_bbae4
+FAILED: cmTC_bbae4 
+: && /usr/bin/cc -DCHECK_FUNCTION_EXISTS=strlcat  -rdynamic CMakeFiles/cmTC_bbae4.dir/CheckFunctionExists.c.o  -o cmTC_bbae4   && :
+/usr/bin/ld: CMakeFiles/cmTC_bbae4.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `strlcat'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
+
+
+Determining if the function strlcpy exists failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_4e4e3"
+[1/2] Building C object CMakeFiles/cmTC_4e4e3.dir/CheckFunctionExists.c.o
+[2/2] Linking C executable cmTC_4e4e3
+FAILED: cmTC_4e4e3 
+: && /usr/bin/cc -DCHECK_FUNCTION_EXISTS=strlcpy  -rdynamic CMakeFiles/cmTC_4e4e3.dir/CheckFunctionExists.c.o  -o cmTC_4e4e3   && :
+/usr/bin/ld: CMakeFiles/cmTC_4e4e3.dir/CheckFunctionExists.c.o: in function `main':
+CheckFunctionExists.c:(.text+0x14): undefined reference to `strlcpy'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
+
+
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_2b7c9"
+[1/2] Building C object CMakeFiles/cmTC_2b7c9.dir/CheckSymbolExists.c.o
+[2/2] Linking C executable cmTC_2b7c9
+FAILED: cmTC_2b7c9 
+: && /usr/bin/cc   -rdynamic CMakeFiles/cmTC_2b7c9.dir/CheckSymbolExists.c.o  -o cmTC_2b7c9   && :
+/usr/bin/ld: CMakeFiles/cmTC_2b7c9.dir/CheckSymbolExists.c.o: in function `main':
+CheckSymbolExists.c:(.text+0x1f): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
+
+File /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/clint/projects/sg/build/dependencies/fltk/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/ninja" "cmTC_0a479"
+[1/2] Building C object CMakeFiles/cmTC_0a479.dir/CheckFunctionExists.c.o
+[2/2] Linking C executable cmTC_0a479
+FAILED: cmTC_0a479 
+: && /usr/bin/cc -DCHECK_FUNCTION_EXISTS=pthread_create  -rdynamic CMakeFiles/cmTC_0a479.dir/CheckFunctionExists.c.o  -o cmTC_0a479  -lpthreads && :
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
+
+

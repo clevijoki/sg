@@ -1,4 +1,5 @@
 #include "EntityEditor.h"
+#include "FormatString.h"
 
 #include <QTableView>
 #include <QSqlQueryModel>
@@ -17,13 +18,18 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QCursor>
+#include <QtMath>
+#include <QWheelEvent>
+#include <QMouseEvent>
+#include <QTreeView>
 
 #include "EntityGraphicsScene.h"
 #include "ComponentSelector.h"
 #include "EntitySelector.h"
 #include "MessageBox.h"
 #include "Controller.h"
-#include <QTreeView>
+#include "ViewEventFilters.h"
+
 
 namespace sg {
 
@@ -47,7 +53,7 @@ namespace sg {
 		void refresh() {
 			QString statement = QString("SELECT entity_component.name, component.name, entity_component.component_id, entity_component.id, entity_component.graph_pos FROM entity_component INNER JOIN component ON component_id = component.id WHERE entity_component.entity_id = %1 ").arg(mEntityId);
 
-			setQuery(statement);			
+			setQuery(statement);
 			if (lastError().isValid()) {
 				MessageBoxCritical("Model Query Error", lastError().text(), statement);
 			}
@@ -142,7 +148,7 @@ namespace sg {
 		void refreshComponents() {
 			QString statement = QString("SELECT entity_component.name, component.name, entity_component.component_id, entity_component.id FROM entity_component INNER JOIN component ON component_id = component.id WHERE entity_component.entity_id = %1 ").arg(mEntityId);
 
-			mComponentModel->setQuery(statement);			
+			mComponentModel->setQuery(statement);
 			if (mComponentModel->lastError().isValid()) {
 				MessageBoxCritical("Model Query Error", mComponentModel->lastError().text(), statement);
 			}
@@ -271,7 +277,7 @@ namespace sg {
 					case COMPONENT_CHILD_ROW: {
 						switch (index.column()) {
 							case COMPONENT_NAME_COL: return mComponentModel->data(mComponentModel->index(index.row(), COMPONENT_NAME_COL));
-							case COMPONENT_TYPE_NAME_COL: return mComponentModel->data(mComponentModel->index(index.row(), role == Qt::EditRole ? COMPONENT_TYPE_ID_COL : COMPONENT_TYPE_NAME_COL)); 
+							case COMPONENT_TYPE_NAME_COL: return mComponentModel->data(mComponentModel->index(index.row(), role == Qt::EditRole ? COMPONENT_TYPE_ID_COL : COMPONENT_TYPE_NAME_COL));
 							default: return QVariant();
 						}
 					} break;
@@ -377,7 +383,7 @@ namespace sg {
 				if (m.rowCount() < 1)
 					return Error("There are no components to add");
 
-				first_component_id = m.data(m.index(0,0)).toString(); 
+				first_component_id = m.data(m.index(0,0)).toString();
 			}
 
 
@@ -443,7 +449,7 @@ namespace sg {
 					return Error("There are no entities to add (cannot add self)");
 
 				for (int row = 0; row < m.rowCount(); ++row) {
-					QVariant entity_id = m.data(m.index(0,0)).toString(); 
+					QVariant entity_id = m.data(m.index(0,0)).toString();
 
 					if (entity_id != mEntityId) {
 						first_entity_id = std::move(entity_id);
@@ -540,7 +546,7 @@ namespace sg {
 									return Ok();
 
 								if (containsComponent(new_value.toString()))
-									return Error(QString("Already contains child component named '%1'").arg(new_value.toString()));
+									return Error("Already contains child component named '"_sb + new_value.toString() + "'");
 
 								auto t = mController.createTransaction("Rename entity child component");
 								auto update_res = t.update(
@@ -680,7 +686,8 @@ namespace sg {
 	};
 
 	EntityEditor::EntityEditor(Controller& controller, QVariant entity_id, QWidget* parent)
-	: QWidget(parent) {
+	: QWidget(parent)
+	, mGraphicsView(new QGraphicsView(this)) {
 
 		auto layout = new QVBoxLayout();
 		this->setLayout(layout);
@@ -691,29 +698,30 @@ namespace sg {
 		// game_viewport->setStyleSheet("background-color:green;");
 		// tab_widget->addTab(game_viewport, "Game");
 
-		auto graph_scene = new EntityGraphicsScene(controller, entity_id, this);
+		auto graph_scene = new EntityGraphicsScene(controller, entity_id.toLongLong(), this);
 
-		auto graph_view = new QGraphicsView();
-		// graph_view->setDragMode(QGraphicsView::ScrollHandDrag);
-		graph_view->setScene(graph_scene);
-		graph_view->setCacheMode(QGraphicsView::CacheBackground);
-		graph_view->setResizeAnchor(QGraphicsView::AnchorUnderMouse);
+		mGraphicsView->setDragMode(QGraphicsView::RubberBandDrag);
+		mGraphicsView->setScene(graph_scene);
+		mGraphicsView->setResizeAnchor(QGraphicsView::AnchorUnderMouse);
+		mGraphicsView->setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+		mGraphicsView->setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+		// mGraphicsView->setOptimizationFlags(QGraphicsView::DontSavePainterState);
 
-		tab_widget->addTab(graph_view, "Setup");
+		tab_widget->addTab(mGraphicsView, "Setup");
 
 		auto ecm = new EntityComponentModel(entity_id, this);
 
 		auto add_component_action = new QAction("Add Component");
-		graph_view->addAction(add_component_action);
+		mGraphicsView->addAction(add_component_action);
 		add_component_action->setShortcut(Qt::CTRL + Qt::Key_N);
 		add_component_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
-		connect(add_component_action, &QAction::triggered, this, [this, &controller, graph_view, ecm](bool){
+		connect(add_component_action, &QAction::triggered, this, [this, &controller, ecm](bool){
 
 			auto res = [&]() -> Result<> {
-				auto t = controller.createTransaction("Query Component");			
+				auto t = controller.createTransaction("Query Component");
 				ComponentSelector cs(t, this);
 
-				QPointF new_point = graph_view->mapFromGlobal(QCursor::pos());
+				QPointF new_point = mGraphicsView->mapFromGlobal(QCursor::pos());
 
 				if (cs.exec() == QDialog::Accepted) {
 					auto res = ecm->addNew(t, cs.selectedId(), new_point);
@@ -733,7 +741,7 @@ namespace sg {
 		});
 
 		auto add_entity_action = new QAction("Add Entity Instance");
-		graph_view->addAction(add_entity_action);
+		mGraphicsView->addAction(add_entity_action);
 		add_entity_action->setShortcut(Qt::CTRL + Qt::Key_A);
 		add_entity_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 		connect(add_entity_action, &QAction::triggered, this, [&](bool){
@@ -746,7 +754,7 @@ namespace sg {
 			}
 		});
 
-		graph_view->setContextMenuPolicy(Qt::ActionsContextMenu);
+		mGraphicsView->setContextMenuPolicy(Qt::ActionsContextMenu);
 
 
 		/*
@@ -835,7 +843,7 @@ namespace sg {
 		// };
 
 		// connect(model, &QAbstractItemModel::modelAboutToBeReset, this, save_selection);
-		// connect(model, &QAbstractItemModel::modelReset, this, restore_selection);		
+		// connect(model, &QAbstractItemModel::modelReset, this, restore_selection);
 
 		auto delete_something = new QAction(tr("Delete"), this);
 		addAction(delete_something);
@@ -894,4 +902,29 @@ namespace sg {
 
 	EntityEditor::~EntityEditor() {
 	}
+
+	// void EntityEditor::wheelEvent(QWheelEvent *e) {
+	// 	if (e->angleDelta().y() > 0) {
+	// 		setZoomLevel(6);
+	// 	} else {
+	// 		setZoomLevel(-6);
+	// 	}
+
+	// 	e->accept();
+	// }
+
+	void EntityEditor::setZoomLevel(int adjust) {
+		mZoomLevel = std::min<int>(500, std::max<int>(0, mZoomLevel + adjust));
+		setupMatrix();
+	}
+
+	void EntityEditor::setupMatrix() {
+		qreal scale = qPow(qreal(2), (mZoomLevel - 250) / qreal(50));
+
+		QMatrix matrix;
+		matrix.scale(scale, scale);
+
+		mGraphicsView->setMatrix(matrix);
+	}
+
 }

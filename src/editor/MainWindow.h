@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QMainWindow>
+#include <unordered_map>
+#include <string>
 
 class QMdiSubWindow;
 class QMdiArea;
@@ -40,7 +42,6 @@ namespace sg {
 
 		class Controller& mController;
 
-		QHash<QString, QMdiSubWindow*> mOpenedResources; 
 		QMdiArea* mMdiArea;
 
 		template<typename T> void openResource(QString title_table, QString title_table_name_key, QString title_table_id, QVariant id_value);

@@ -53,26 +53,26 @@ namespace sg {
 		setLayout(layout);
 	}
 
-	void MessageBoxCritical(QString title, QString message, QString info) {
+	void MessageBoxCritical(StringBuilder title, StringBuilder message, StringBuilder info) {
 		if (gMessageBoxSilenceScope == 0) {
-			printf("%s: %s %s\n", title.toStdString().c_str(), message.toStdString().c_str(), info.toStdString().c_str());
-			MessageBox mb(std::move(title), std::move(message), std::move(info));
+			printf("%s: %s %s\n", title.c_str(), message.c_str(), info.c_str());
+			MessageBox mb(title.c_str(), message.c_str(), info.c_str());
 			mb.exec();
 
 		} else {
 			if (gIsTesting) {
 				gTestingHadCriticalError = true;
 			} else {
-				qFatal("%s: %s", title.toStdString().c_str(), message.toStdString().c_str());
+				qFatal("%s: %s", title.c_str(), message.c_str());
 			}
 		}
 	}
 
-	QMessageBox::StandardButton MessageBoxQuestion(QString title, QString message, QMessageBox::StandardButton default_button, QMessageBox::StandardButtons buttons) {
+	QMessageBox::StandardButton MessageBoxQuestion(StringBuilder title, StringBuilder message, QMessageBox::StandardButton default_button, QMessageBox::StandardButtons buttons) {
 		if (gMessageBoxSilenceScope == 0) {
-			return QMessageBox::question(nullptr, title, message, buttons, default_button);
+			return QMessageBox::question(nullptr, title.c_str(), message.c_str(), buttons, default_button);
 		} else {
-			QDebug(QtInfoMsg) << message << "... selecting" << default_button;
+			QDebug(QtInfoMsg) << message.c_str() << "... selecting" << default_button;
 			return default_button;
 		}
 	}

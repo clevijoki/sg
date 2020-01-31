@@ -102,14 +102,14 @@ int main(int argc, char** argv)
 	if (parser.isSet(codegen_header) || parser.isSet(codegen_cpp)) {
 		auto gen_res = sg::GenerateComponentFiles(
 			controller.createTransaction("Generate Headers"),
-			parser.value(codegen_header),
-			parser.value(codegen_cpp)
+			parser.value(codegen_header).toStdString(),
+			parser.value(codegen_cpp).toStdString()
 		);
 
 		if (gen_res.failed()) {
-			qCritical() << gen_res.errorMessage();
-			if (!gen_res.errorInfo().isEmpty()) {
-				qCritical() << gen_res.errorInfo();
+			qCritical() << gen_res.errorMessage().c_str();
+			if (!gen_res.errorInfo().empty()) {
+				qCritical() << gen_res.errorInfo().c_str();
 			}
 
 			return -1;

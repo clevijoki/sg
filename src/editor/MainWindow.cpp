@@ -165,7 +165,7 @@ namespace sg {
 			}
 		}
 
-		T* sw = new T(mController, id_value, this);
+		T* sw = new T(mController, id_value.toLongLong(), this);
 		auto msw = mMdiArea->addSubWindow(sw);
 		msw->setProperty("resource_id", prop_name);
 		// this should delete with the parent

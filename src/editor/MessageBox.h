@@ -2,6 +2,7 @@
 #include <QString>
 #include <QMessageBox>
 #include <QDialog>
+#include "FormatString.h"
 
 namespace sg {
 
@@ -22,6 +23,6 @@ namespace sg {
 	/*
 	Wrapper around QMessageBox::critical to be able to assert in unit tests
 	*/
-	void MessageBoxCritical(QString title, QString message, QString info=QString());
-	QMessageBox::StandardButton MessageBoxQuestion(QString title, QString message, QMessageBox::StandardButton default_buttons=QMessageBox::No, QMessageBox::StandardButtons buttons=QMessageBox::Yes|QMessageBox::No);
+	void MessageBoxCritical(StringBuilder title, StringBuilder message, StringBuilder info=QString());
+	QMessageBox::StandardButton MessageBoxQuestion(StringBuilder title, StringBuilder message, QMessageBox::StandardButton default_buttons=QMessageBox::No, QMessageBox::StandardButtons buttons=QMessageBox::Yes|QMessageBox::No);
 }

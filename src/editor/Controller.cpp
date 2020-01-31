@@ -1,5 +1,6 @@
 #include "Controller.h"
 #include <gtest/gtest.h>
+#include <vector>
 
 #include <QSqlError>
 #include <QSqlDriver>
@@ -11,6 +12,7 @@
 #include <QList>
 #include <QSqlQueryModel>
 #include <QDebug>
+
 
 namespace sg {
 
@@ -443,7 +445,7 @@ namespace sg {
 
 	class CmdDropTable : public ICommand {
 		QString mTableName;
-		QVector<QMap<QString, QVariant>> mTableRows;
+		std::vector<QMap<QString, QVariant>> mTableRows;
 		QStringList mReCreateColumns;
 
 	public:
@@ -459,7 +461,7 @@ namespace sg {
 
 		Result<> perform(QSqlDatabase& db) override {
 
-			if (mTableRows.isEmpty()) {
+			if (mTableRows.empty()) {
 				// query all of the data to restore
 				QSqlQuery q(db);
 				QString statement = QString("SELECT * FROM \"%1\"").arg(mTableName);
@@ -491,7 +493,7 @@ namespace sg {
 			if (res.failed())
 				return res.error();
 
-			if (mTableRows.isEmpty())
+			if (mTableRows.empty())
 				return Ok();
 
 			QString values_str;
@@ -524,11 +526,10 @@ namespace sg {
 		if (failed())
 			return error();
 
-		QString statement = QString("LOCK TABLE \"%1\" IN EXCLUSIVE MODE")
-			.arg(table_name);
+		std::string statement = ("LOCK TABLE \""_sb + table_name + "\" IN EXCLUSIVE MODE").take();
 
 		QSqlQuery q(*mConnection);
-		if (!q.exec(statement)) {
+		if (!q.exec(statement.c_str())) {
 			return Error(q.lastError().text(), statement);
 		}
 
@@ -877,7 +878,7 @@ TEST(Controller, CmdDropTable) {
 
 	sg::Controller c(db);
 
-	QVector<QVariant> row_ids;
+	std::vector<QVariant> row_ids;
 
 	{
 		auto t = c.createTransaction("CmdDropTable setup");

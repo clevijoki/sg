@@ -2,9 +2,10 @@
 
 #include <QDialog>
 
+#include <string_view>
+
 class QPushButton;
 class QLineEdit;
-class QString;
 class QSqlDatabase;
 class QCheckBox;
 
@@ -16,14 +17,14 @@ namespace sg {
 		QCheckBox *const mAutoConnect;
 
 	public:
-		ConnectDialog(QString address, QString database_name, QString user_name, QString password, bool auto_connect,
+		ConnectDialog(std::string_view address, std::string_view database_name, std::string_view user_name, std::string_view password, bool auto_connect,
 			QSqlDatabase& db, QWidget *parent=nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 		~ConnectDialog();
 
-		QString address() const;
-		QString databaseName() const;
-		QString userName() const;
-		QString password() const;
+		std::string address() const;
+		std::string databaseName() const;
+		std::string userName() const;
+		std::string password() const;
 		bool autoConnect() const;
 	};
 }

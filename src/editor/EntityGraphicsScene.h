@@ -4,6 +4,8 @@
 #include <QGraphicsScene>
 #include <memory>
 
+class QGraphicsItemGroup;
+
 namespace sg {
 
 	class EntityGraphicsScene : public QGraphicsScene {
@@ -11,6 +13,6 @@ namespace sg {
 
 	public:
 
-		EntityGraphicsScene(class Controller& controller, QVariant entity_id, QObject *parent=nullptr);
+		EntityGraphicsScene(class Controller& controller, int64_t entity_id, QObject *parent=nullptr);
 	};
 }

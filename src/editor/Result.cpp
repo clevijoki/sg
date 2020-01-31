@@ -1,7 +1,20 @@
 #include "Result.h"
 #include <gtest/gtest.h>
+#include <cstdarg>
+#include <cstdlib>
 
 namespace sg {
+
+	void FatalError(const char* msg, ...) {
+		va_list args;
+		va_start (args, msg);
+
+		vprintf(msg, args);
+
+		va_end(args);
+
+		std::quick_exit(-1);
+	}
 
 	namespace test {
 
@@ -9,9 +22,8 @@ namespace sg {
 			return Ok();
 		}
 
-		Result<QString> ReturnSuccessValue() {
-			QString res = "Succeeded";
-			return Ok(std::move(res));
+		Result<std::string> ReturnSuccessValue() {
+			return Ok<std::string>("Succeeded");
 		}
 
 		Result<> ReturnFailed() {
@@ -36,9 +48,9 @@ namespace sg {
 
 		EXPECT_TRUE(PropagateError().failed());
 
-		EXPECT_STREQ("Error Message", ReturnFailed().errorMessage().toStdString().c_str());
-		EXPECT_STREQ("Error Message", PropagateError().errorMessage().toStdString().c_str());	
+		EXPECT_STREQ("Error Message", ReturnFailed().errorMessage().c_str());
+		EXPECT_STREQ("Error Message", PropagateError().errorMessage().c_str());	
 
-		EXPECT_STREQ("Succeeded", ReturnSuccessValue()->toStdString().c_str());
+		EXPECT_STREQ("Succeeded", ReturnSuccessValue()->c_str());
 	}
 }

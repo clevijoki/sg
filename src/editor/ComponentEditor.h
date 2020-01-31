@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.h"
 
 #include <QWidget>
 
@@ -7,7 +8,7 @@ namespace sg {
 		Q_OBJECT
 
 	public:
-		ComponentEditor(class Controller& controller, QVariant component_id, QWidget* parent);
+		ComponentEditor(class Controller& controller, id_t component_id, QWidget* parent);
 		~ComponentEditor();
 	};
 }

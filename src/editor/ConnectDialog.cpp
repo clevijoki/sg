@@ -12,13 +12,13 @@
 namespace sg {
 
 	ConnectDialog::ConnectDialog(
-		QString address, QString database_name, QString user_name, QString password, bool auto_connect,
+		std::string_view address, std::string_view database_name, std::string_view user_name, std::string_view password, bool auto_connect,
 		QSqlDatabase& db, QWidget *parent, Qt::WindowFlags f)
 	: QDialog(parent, f)
-	, mAddress(new QLineEdit(address, this))
-	, mDatabaseName(new QLineEdit(database_name, this))
-	, mUserName(new QLineEdit(user_name, this))
-	, mPassword(new QLineEdit(password, this))
+	, mAddress(new QLineEdit(QString((const QChar*)address.data(), address.length()), this))
+	, mDatabaseName(new QLineEdit(QString((const QChar*)database_name.data(), database_name.length()), this))
+	, mUserName(new QLineEdit(QString((const QChar*)user_name.data(), user_name.length()), this))
+	, mPassword(new QLineEdit(QString((const QChar*)password.data(), password.length()), this))
 	, mConnectButton(new QPushButton(tr("Connect"), this))
 	, mAutoConnect(new QCheckBox(tr("Auto Connect"), this)) {
 
@@ -49,10 +49,10 @@ namespace sg {
 
 		QObject::connect(mConnectButton, &QPushButton::clicked, [this, status_label, &db]() {
 
-			db.setDatabaseName(this->databaseName());
-			db.setUserName(this->userName());
-			db.setPassword(this->password());
-			QUrl url(this->address());
+			db.setDatabaseName(this->databaseName().c_str());
+			db.setUserName(this->userName().c_str());
+			db.setPassword(this->password().c_str());
+			QUrl url(this->address().c_str());
 			db.setHostName(url.host());
 			db.setPort(url.port());
 
@@ -70,20 +70,20 @@ namespace sg {
 
 	}
 
-	QString ConnectDialog::address() const {
-		return mAddress->text();
+	std::string ConnectDialog::address() const {
+		return mAddress->text().toStdString();
 	}
 
-	QString ConnectDialog::databaseName() const {
-		return mDatabaseName->text();
+	std::string ConnectDialog::databaseName() const {
+		return mDatabaseName->text().toStdString();
 	}
 
-	QString ConnectDialog::userName() const {
-		return mUserName->text();
+	std::string ConnectDialog::userName() const {
+		return mUserName->text().toStdString();
 	}
 
-	QString ConnectDialog::password() const {
-		return mPassword->text();
+	std::string ConnectDialog::password() const {
+		return mPassword->text().toStdString();
 	}
 
 	bool ConnectDialog::autoConnect() const {
