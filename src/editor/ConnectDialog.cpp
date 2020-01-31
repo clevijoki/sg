@@ -8,6 +8,7 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QUrl>
+#include <QLatin1String>
 
 namespace sg {
 
@@ -15,10 +16,10 @@ namespace sg {
 		std::string_view address, std::string_view database_name, std::string_view user_name, std::string_view password, bool auto_connect,
 		QSqlDatabase& db, QWidget *parent, Qt::WindowFlags f)
 	: QDialog(parent, f)
-	, mAddress(new QLineEdit(QString((const QChar*)address.data(), address.length()), this))
-	, mDatabaseName(new QLineEdit(QString((const QChar*)database_name.data(), database_name.length()), this))
-	, mUserName(new QLineEdit(QString((const QChar*)user_name.data(), user_name.length()), this))
-	, mPassword(new QLineEdit(QString((const QChar*)password.data(), password.length()), this))
+	, mAddress(new QLineEdit(QLatin1String(address.data(), (int)address.size()), this))
+	, mDatabaseName(new QLineEdit(QLatin1String(database_name.data(), (int)database_name.size()), this))
+	, mUserName(new QLineEdit(QLatin1String(user_name.data(), (int)user_name.size()), this))
+	, mPassword(new QLineEdit(QLatin1String(password.data(), (int)password.size()), this))
 	, mConnectButton(new QPushButton(tr("Connect"), this))
 	, mAutoConnect(new QCheckBox(tr("Auto Connect"), this)) {
 
